@@ -1,0 +1,17 @@
+<script type="text/javascript">
+//<![CDATA[
+    let CMS_URL = '<?php echo CMSBRIDGE_CMS_URL ?>';
+    if('<?php echo CMSBRIDGE_CMS_NAME ?>' == 'wbce') {
+        if ( typeof jQuery == 'undefined' ) {
+            var fileref=document.createElement("script")
+            fileref.setAttribute("type", "text/javascript");
+            fileref.setAttribute("src", CMS_URL+"/include/jquery/jquery-min.js");
+            if (typeof fileref!="undefined") {
+                document.getElementsByTagName("head")[0].appendChild(fileref);
+            }
+        }
+    }
+//]]>
+</script>
+
+<div class="mod_journal <?php echo CMSBRIDGE_CMS_NAME ?>">

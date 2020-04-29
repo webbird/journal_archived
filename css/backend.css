@@ -1,0 +1,2 @@
+.mod_journal .tabs label.tab,.mod_journal .tabs label.tab:hover{border-bottom-color:#fff}
+.mod_journal .tabs [id^="tab"]:checked + label.tab{color:#fff;border-color:#fff;border-bottom-color:transparent;}

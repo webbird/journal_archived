@@ -1,0 +1,179 @@
+<?php include 'backend_header.phtml'; ?>
+    <h2><?php echo self::t('Write post') ?></h2>
+    <div class="jsadmin jcalendar hide"></div>
+    <form name="modify" action="<?php echo $data['form_edit_url'] ?>" method="post" enctype="multipart/form-data">
+        <?php echo self::admin()->getFTAN(); ?>
+        <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
+        <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+        <input type="hidden" name="post_id" value="<?php echo $data['post_id']; ?>" />
+
+        <table class="table table-sm">
+            <tbody>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Title'); ?>:</td>
+                	<td class="setting_value">
+                		<input type="text" name="title" id="title<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['title'])); ?>" maxlength="255" />
+                	</td>
+                </tr>
+                <tr<?php if($settings['mode']!='advanced'): ?> style="display:none"<?php endif; ?>>
+                	<td class="setting_name"><?php echo self::t('Link'); ?>:</td>
+                	<td class="setting_value">
+                		<?php echo $data['linkbase'] ?>/<input type="text" name="link" id="link<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['link'])); ?>" maxlength="255" style="width:80%" /><?php echo PAGE_SPACER.$data['post_id'].PAGE_EXTENSION; ?>
+                	</td>
+                </tr>
+<?php if ($data['image'] != ""): ?>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Preview image'); ?>:</td>
+                	<td>
+                        <img class="img_list" style="float:left;margin-right:15px" src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA."/".JOURNAL_IMAGE_SUBDIR."/".$data['image'] ?>" /> <?php echo $data['image'] ?><br />
+                        <a class="btn" href="javascript:confirm_link('<?php echo self::t('ARE_YOU_SURE'), '\n', self::t('This will reload the page; all unsaved data will be lost!'); ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/modify_post.php?page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&post_id=<?php echo $data['post_id'] ?>&post_img=<?php echo $data['image'] ?>');">
+                            <i class="fa fa-fw fa-trash"></i> <?php echo self::t('Delete') ?>
+                        </a><br />
+                        <?php echo self::t('To select a different post image, please mark the desired image at the bottom of the list.'); ?>
+            		</td>
+                </tr>
+<?php endif; ?>
+                <tr>
+                    <td class="setting_name"><?php echo self::t('Group'); ?>:</td>
+                    <td class="setting_value">
+<?php include __DIR__.'/group_select.phtml'; ?>
+                    </td>
+                </tr>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Active'); ?>:</td>
+                	<td class="setting_value">
+                		<input type="radio" name="active" id="active_true" value="1" <?php if ($data['active'] == 1): echo ' checked="checked"'; endif; ?> />
+                		<a href="#" onclick="javascript: document.getElementById('active_true').checked = true;">
+                		<?php echo self::t('Yes'); ?>
+                		</a>
+                		&nbsp;
+                		<input type="radio" name="active" id="active_false" value="0" <?php if ($data['active'] == 0): echo ' checked="checked"'; endif; ?> />
+                		<a href="#" onclick="javascript: document.getElementById('active_false').checked = true;">
+                		<?php echo self::t('No'); ?>
+                		</a>
+                	</td>
+                </tr>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Pub. start'); ?>:</td>
+                	<td class="setting_value">
+                	    <input type="text" id="publishdate" name="publishdate" data-field="datetime" value="<?php echo $data['publishing_date']; ?>" style="width:33%;" />
+                        <i class="far fa-calendar" id="publishdate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
+                    	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
+                        <div id="dtBox_<?php echo $sectionID ?>_1"></div>
+                	</td>
+                </tr>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Pub. end'); ?>:</td>
+                	<td class="setting_value">
+                	    <input type="text" id="enddate" name="enddate" data-field="datetime" value="<?php echo $data['publishing_end_date'] ; ?>" style="width:33%;" />
+                    	<i class="far fa-calendar" id="enddate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
+                    	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
+                        <div id="dtBox_<?php echo $sectionID ?>_2"></div>
+                	</td>
+<?php if($settings['mode']=='advanced' && isset($data['tags']) && is_array($data['tags']) && count($data['tags'])>0): ?>
+                <tr>
+                	<td class="setting_name"><?php echo self::t('Tags'); ?>:</td>
+                	<td class="setting_value">
+                		<div class="mod_journal_taglist">
+                		<?php foreach($data['tags'] as $t): ?>
+                            <div class="mod_journal_tag">
+                                <input type="checkbox" name="tags[]" id="<?php echo $t['tag_id'] ?>" value="<?php echo $t['tag_id'] ?>"<?php if(array_key_exists($t['tag_id'],$data['assigned'])): echo " checked='checked'"; endif; ?> />
+                                <label class="mod_nwi_tag" for="<?php echo $t['tag_id'] ?>"><?php echo $t['tag'] ?></label>
+                                <?php if($t['section_id']==0): ?>
+                                    <span class="fa fa-fw fa-globe" title="<?php echo self::t('Global tag') ?>"></span>
+                                <?php endif; ?>
+                            </div>
+                		<?php endforeach; ?>
+            			</div>
+                	</td>
+                </tr>
+<?php endif; ?>
+            </tbody>
+        </table><hr />
+
+        <table class="table table-sm">
+            <tbody>
+                <tr>
+                	<td valign="top"><?php echo self::t('Short'); ?>:</td>
+                </tr>
+                <tr>
+                	<td>
+<?php echo self::wysiwyg("short", htmlspecialchars($data['content_short']), "100%", "100px"); ?>
+                	</td>
+                </tr>
+                <tr>
+                	<td valign="top"><?php echo self::t('Long'); ?>:</td>
+                </tr>
+                <tr>
+                	<td>
+<?php echo self::wysiwyg("long", htmlspecialchars($data['content_long']), "100%", "15em"); ?>
+                	</td>
+                </tr>
+<?php if($settings['use_second_block']=='Y'): ?>
+                <tr>
+                	<td valign="top"><?php echo self::t('Block'); ?> 2:</td>
+                </tr>
+                <tr>
+                	<td>
+<?php echo self::wysiwyg("block2", htmlspecialchars($data['content_block2']), "100%", "100px"); ?>
+            	   </td>
+                </tr>
+<?php endif;?>
+            </tbody>
+        </table>
+
+        <div id="fotoshow"><a name="fs"></a>
+            <h3><?php echo self::t('Gallery images') ?></h3>
+<?php if(isset($data['images']) && is_array($data['images']) && count($data['images'])>0): $i=1; ?>
+            <table class="dragdrop_form table table-sm">
+                <thead>
+                    <tr>
+                        <th colspan="2"></th>
+                        <th title="<?php echo self::t('Show this image on the posts listing page') ?>"><?php echo self::t('Preview image') ?></th>
+                        <th><?php echo self::t('Image') ?></th>
+                        <th><?php echo self::t('Description (optional)') ?></th>
+                        <th colspan="3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+<?php foreach($data['images'] as $i => $image): ?>
+                    <tr id="img_id:<?php echo $image['id'] ?>">
+        	            <td class="dragdrop_item">&nbsp;</td>
+                        <td>
+<i class="fa fa-fw<?php if($i>0 && count($data['images'])>1 && $i <= count($data['images'])): ?> fa-angle-up<?php endif; ?>"></i>
+<i class="fa fa-fw<?php if($i==0 && count($data['images'])>1): ?> fa-angle-down<?php endif; ?>"></i>
+                        </td>
+                        <td>
+                            <input title="<?php echo self::t('Show this image on the posts listing page') ?>" type="radio" name="preview[<?php echo $image['id'] ?>]" id="preview[<?php echo $image['id'] ?>]" value="<?php echo $image['id'] ?>"<?php if($image['preview']=='Y'): ?> checked="checked"<?php endif; ?> />
+                        </td>
+                        <td>
+                            <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $i ?>', x:1, y:1})">
+                                <img class="img_list" src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.$data['post_id'] ?>/thumb/<?php echo $image["picname"] ?>" />
+                            </a>
+                            <div id="tt<?php echo $i ?>" class="xbtooltip">
+                                <img src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.$data['post_id'] ?>/<?php echo $image["picname"] ?>" />
+                            </div><br />
+                            <?php echo $image["picname"] ?>
+                        </td>
+                        <td>
+                            <input type="text" name="picdesc[<?php echo $image['id'] ?>]" value="<?php echo htmlspecialchars($image["picdesc"]) ?>">
+                        </td>
+                        <td>
+                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo CMSBRIDGE_CMS_URL ?>/modules/journal/modify_post.php?page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&post_id=<?php echo $data['post_id'] ?>&img_id=<?php echo $image['id'] ?>#fs">
+                                <i class="fa fa-fw fa-trash text-danger"></i>
+                            </a>
+                        </td>
+                        <td class="dragdrop_item">&nbsp;</td>
+                    </tr>
+<?php $i++; endforeach; ?>
+                </tbody>
+            </table>
+<?php endif; ?>
+        </div>
+
+
+<?php
+    include __DIR__.'/modify_post_upload_form.phtml';
+    include __DIR__.'/../../js/datetimepickers/xdsoft/include.phtml';
+?>
+</div><!-- /mod_journal -->

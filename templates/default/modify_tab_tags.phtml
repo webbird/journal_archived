@@ -1,0 +1,63 @@
+<?php if($settings['mode']=='advanced'): ?>
+        <div id="main-tab-content3" class="main-tab-content">
+            <p><?php echo self::t('To use tags, edit a post and select the desired posts there.') ?></p>
+
+            <form method="post" action="<?php echo $data['edit_url'] ?>">
+                <?php echo self::admin()->getFTAN(); ?>
+                <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
+                <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+                <input type="hidden" name="tab" value="s" />
+                <label for="new_tag"><?php echo self::t('Add tag') ?></label>:
+                <input class="form-control" type="text" name="new_tag" id="new_tag" value="" maxlength="255" style="width:250px" />
+<?php if($data['is_admin']): ?>
+                <input type="checkbox" name="global_tag" value="1" /> <span title="<?php echo self::t('Global tags can be used in all news with images sections.') ?>"><?php echo self::t('Global') ?></span>
+<?php endif; ?>
+                <input type="submit" class="mod_img_news_add" value="<?php echo self::t('Add tag') ?>" />
+            </form><br />
+
+<?php if(isset($data['tags']) && is_array($data['tags']) && count($data['tags'])>0): ?>
+            <table class="table table-sm table-striped">
+                <thead class="thead-dark">
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th><?php echo self::t('Tag') ?></th>
+                            <th><?php echo self::t('Tag color') ?></th>
+                            <th><?php echo self::t('Text color') ?></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                <tbody>
+<?php foreach($data['tags'] as $tag): ?>
+                    <tr>
+                        <td style="width:20px">
+                            <a href="<?php echo $data['edit_url']; ?>tab=s&amp;tag_id=<?php echo $tag['tag_id']; ?>" title="<?php echo self::t('Modify') ?>">
+                                <span class="fa fa-fw fa-edit"></span>
+                            </a>
+                        </td>
+                        <td style="width:20px">
+                            <?php if($tag['section_id']==0): ?>
+                                <span class="fa fa-fw fa-star" title="<?php echo self::t('Global') ?>"></span>
+                            <?php endif; ?>
+                        </td>
+                        <td><a href="<?php echo $data['edit_url']; ?>tab=s&amp;tag_id=<?php echo $tag['tag_id']; ?>" title="<?php echo self::t('Modify') ?>"><?php echo $tag['tag'] ?></a></td>
+                        <td><span class="mod_journal_color" style="<?php if(strlen($tag['tag_color'])>0): echo 'background-color:'.$tag['tag_color'];endif ?>"></span></td>
+                        <td><span class="mod_journal_color" style="<?php if(strlen($tag['text_color'])>0): echo 'background-color:'.$tag['text_color'];endif ?>"></span></td>
+                        <td style="width:20px">
+<?php if($tag['section_id']!=0 || $data['is_admin']): ?>
+                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/delete_tag.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;tag_id=<?php echo $tag['tag_id']; ?>');" title="<?php echo self::t('Delete') ?>">
+                                <span class="fa fa-fw fa-close nwi-delete"></span>
+                            </a>
+<?php endif; ?>
+                        </td>
+                    </tr>
+<?php endforeach; ?>
+                </tbody>
+            </table>
+<?php else: ?>
+            <div class="alert alert-info">
+                <?php echo self::t('No tags yet.'); ?>
+            </div>
+<?php endif; ?>
+        </div> <!-- #tab-content3 -->
+<?php endif; ?>

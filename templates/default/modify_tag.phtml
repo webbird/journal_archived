@@ -1,0 +1,66 @@
+<?php include 'backend_header.phtml'; ?>
+    <h2><?php self::t('Modify tag') ?></h2>
+    <form name="modify" action="<?php echo $data['edit_url'] ?>" method="post" enctype="multipart/form-data">
+        <?php echo \CAT\Addon\cmsbridge::admin()->getFTAN(); ?>
+        <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
+        <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+        <input type="hidden" name="tag_id" value="<?php echo $data['tag']['tag_id']; ?>" />
+        <input type="hidden" name="tab" value="s" />
+<?php if($settings['mode']=='advanced'): ?>
+                <input type="hidden" name="mode" value="default" />
+<?php else: ?>
+                <input type="hidden" name="mode" value="advanced" />
+<?php endif; ?>
+        <table>
+            <tr>
+            	<td class="setting_name"><?php echo self::t('Tag') ?>:</td>
+            	<td class="setting_value" colspan="3">
+            		<input type="text" name="tag" value="<?php echo (htmlspecialchars($data['tag']['tag'])); ?>" maxlength="255" />
+            	</td>
+            </tr>
+<?php if($settings['mode']=='advanced'): ?>
+            <tr>
+            	<td class=""><?php echo self::t('Background color') ?>:</td>
+            	<td class="">
+            		<input type="text" name="tag_color" value="<?php echo (htmlspecialchars($data['tag']['tag_color'])); ?>" maxlength="7" />
+            	</td>
+                <td class=""><?php echo self::t('Text color') ?>:</td>
+            	<td class="">
+            		<input type="text" name="text_color" value="<?php echo (htmlspecialchars($data['tag']['text_color'])); ?>" maxlength="7" />
+            	</td>
+            </tr>
+            <tr>
+            	<td class=""><?php echo self::t('On mouse over background color') ?>:</td>
+            	<td class="">
+            		<input type="text" name="hover_color" value="<?php echo (htmlspecialchars($data['tag']['hover_color'])); ?>" maxlength="7" />
+            	</td>
+                <td class=""><?php echo self::t('Text hover color') ?>:</td>
+            	<td class="">
+            		<input type="text" name="text_hover_color" value="<?php echo (htmlspecialchars($data['tag']['text_hover_color'])); ?>" maxlength="7" />
+            	</td>
+            </tr>
+<?php endif; ?>
+            <tr>
+                <td colspan="2">
+            		<input name="save_tag" type="submit" value="<?php echo self::t('Save') ?>" />
+            	</td>
+            	<td colspan="2" style="text-align:right">
+            		<input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" />
+            	</td>
+            </tr>
+        </table>
+    </form>
+    <script>
+    //<![CDATA[
+    jQuery.noConflict();
+    (function($) {
+        $.get(CMS_URL+"/modules/journal/js/spectrum.js", function() {
+            $("input[name='tag_color']").spectrum({preferredFormat: "hex", allowEmpty: true, showInput: true });
+            $("input[name='text_color']").spectrum({preferredFormat: "hex", allowEmpty: true, showInput: true });
+            $("input[name='hover_color']").spectrum({preferredFormat: "hex", allowEmpty: true, showInput: true });
+            $("input[name='text_hover_color']").spectrum({preferredFormat: "hex", allowEmpty: true, showInput: true });
+        });
+    })(jQuery);
+    //]]>
+    </script>
+</div>

@@ -1,0 +1,1 @@
+<script src="<?php echo CMSBRIDGE_CMS_URL ?>/modules/journal/js/galleries/fotorama/fotorama.js"></script>

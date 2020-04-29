@@ -1,0 +1,22 @@
+        <input type="radio" name="tabs" id="maintab1"<?php if($data['curr_tab']=='p'): ?> checked="checked"<?php endif; ?> />
+        <label for="maintab1" class="tab">
+            <i class="fa fa-fw fa-clone"></i> <span><?php echo self::t('Posts') ?></span>
+        </label>
+        <input type="radio" name="tabs" id="maintab2"<?php if($data['curr_tab']=='g'): ?> checked="checked"<?php endif; ?> />
+        <label for="maintab2" class="tab">
+            <i class="fa fa-fw fa-cubes"></i> <span><?php echo self::t('Groups') ?></span>
+        </label>
+<?php if($settings['mode']=='advanced'): ?>
+        <input type="radio" name="tabs" id="maintab3"<?php if($data['curr_tab']=='s'): ?> checked="checked"<?php endif; ?> />
+        <label for="maintab3" class="tab">
+            <i class="fa fa-fw fa-tags"></i> <span><?php echo self::t('Tags') ?></span>
+        </label>
+<?php endif; ?>
+        <input type="radio" name="tabs" id="maintab4"<?php if($data['curr_tab']=='o'): ?> checked="checked"<?php endif; ?> />
+        <label for="maintab4" class="tab">
+            <i class="fa fa-fw fa-wrench"></i> <span><?php echo self::t('Options') ?></span>
+        </label>
+        <input type="radio" name="tabs" id="maintab5"<?php if($data['curr_tab']=='r'): ?> checked="checked"<?php endif; ?> />
+        <label for="maintab5" class="tab">
+            <i class="fa fa-fw fa-info-circle"></i> <span><?php echo self::t('Readme') ?></span>
+        </label>

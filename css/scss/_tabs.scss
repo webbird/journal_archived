@@ -1,0 +1,69 @@
+/* ===== MAIN TABS ===== */
+.mod_journal .tabs {
+    float: none;
+    list-style: none;
+    padding: 0;
+}
+.mod_journal.wbce .tabs {
+    margin-top: 5px;
+}
+.mod_journal .tabs:after {
+    content: '';
+    display: table;
+    clear: both;
+}
+.mod_journal .tabs input[type=radio] {
+    display: none;
+}
+.mod_journal .tabs label.tab {
+    display: block;
+    float: left;
+    width: 20%;
+    color: #ccc;
+    font-size: 1.3em;
+    font-weight: normal;
+    text-decoration: none;
+    text-align: center;
+    line-height:1.3em;
+    cursor: pointer;
+    transition: all 0.5s;
+    margin-right: 0 !important;
+    margin-bottom: -1px;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.mod_journal div.tabs label.tab i.fa{
+    margin-right:5px;
+}
+.mod_journal .tabs label.tab i {
+    padding: 5px;
+    margin-right: 0;
+}
+.mod_journal .tabs label.tab:hover {
+    color: #3498db;
+}
+.mod_journal .tab-content {
+    display: none;
+    width: 100%;
+    float: left;
+    padding: 15px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-top-width: 0;
+}
+.mod_journal .tabs [id^="tab"]:checked + label.tab {
+    color: #3498db;
+    font-weight:900;
+    box-shadow: 3px -3px 3px #ccc;
+    border-bottom-color: transparent;
+}
+@media (min-width: 768px) {
+    .tabs i {
+        padding: 5px;
+        margin-right: 10px;
+    }
+    .tabs label.tab span {
+        display: inline-block;
+    }
+}
+[type=radio]:checked ~ label ~ .tab-content {z-index: 2;display:block;}

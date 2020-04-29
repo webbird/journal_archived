@@ -1,0 +1,91 @@
+        <div id="main-tab-content2" class="main-tab-content">
+            <form name="add_group" action="<?php echo  $data['edit_url'] ?>" method="post" enctype="multipart/form-data">
+                <?php echo self::admin()->getFTAN(); ?>
+                <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
+                <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+                <input type="hidden" name="tab" value="g" />
+                <label for="title"><?php echo self::t('Add group') ?>:</label>
+                <input type="text" name="title" value="" maxlength="255" style="width:250px" />
+                <input type="checkbox" name="active" id="active_true" value="1" checked="checked" />
+                <label for="active_true"><?php echo self::t('Active'); ?></label>
+                <input name="add_group" id="add_group" type="submit" value="<?php echo self::t('Save') ?>" />
+            </form><br />
+
+<?php if(strlen($data['error'])): ?>
+            <div class="alert alert-danger"><?php echo $data['error'] ?></div>
+<?php endif; if(strlen($data['info'])): ?>
+            <div class="alert alert-info"><?php echo $data['info'] ?></div>
+<?php endif; ?>
+
+<?php if(isset($data['groups']) && is_array($data['groups']) && count($data['groups'])>0): ?>
+            <table class="table table-sm table-striped dragdrop_form">
+                <thead class="thead-dark">
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th><?php echo self::t('Title') ?></th>
+                        <th><?php echo self::t('Active') ?></th>
+                        <th><?php echo self::t('Image') ?></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+<?php foreach($data['groups'] as $group): ?>
+                    <tr id="group_id:<?php echo $group['id_key']; ?>">
+                        <td class="dragdrop_item">&nbsp;</td>
+                        <td style="width:20px">
+                            <a href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Modify') ?>">
+                                <span class="fa fa-fw fa-edit"></span>
+                            </a>
+                        </td>
+                        <td>
+                            <a href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>">
+                                <?php echo $group['title'].' (ID: '.$group['group_id'].')'; ?>
+                            </a>
+                        </td>
+                        <td style="width:150px">
+                            <span class="fa fa-fw <?php if ($group['active'] == 1): ?>fa-eye nwi-active<?php else: ?>fa-eye-slash nwi-inactive<?php endif; ?>"></span>
+                        </td>
+                        <td>
+                        <?php if(strlen($group['image'])>0): ?>
+                            <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $group['group_id'] ?>', x:1, y:1})">
+                                <img style="max-height:20px" src="<?php echo $group['image']; ?>" alt="<?php echo self::t('Image') ?>" />
+                            </a>
+                            <div id="tt<?php echo $group['group_id'] ?>" class="xbtooltip">
+                                <img src="<?php echo $group['image'] ?>" />
+                            </div>
+                        <?php endif; ?>
+                        </td>
+                        <td style="width:20px">
+                            <?php if ($group['position'] != 1): ?>
+                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_up.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Move up') ?>">
+                                <span class="fa fa-fw fa-arrow-circle-up mod_journal_arrow"></span>
+                            </a>
+                            <?php endif; ?>
+                        </td>
+                        <td style="width:20px">
+                            <?php if ($group['position'] != $data['num_groups']): ?>
+                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_down.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Move down') ?>">
+                                <span class="fa fa-fw fa-arrow-circle-down mod_journal_arrow"></span>
+                            </a>
+                        <?php endif; ?>
+                        </td>
+                        <td style="width:20px">
+                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;del_group=<?php echo $group['id_key']; ?>&amp;tab=g');" title="<?php echo self::t('Delete') ?>">
+                                <span class="fa fa-fw fa-trash text-danger"></span>
+                            </a>
+                        </td>
+                        <td class="dragdrop_item">&nbsp;</td>
+                    </tr>
+<?php endforeach; ?>
+                </tbody>
+            </table>
+<?php else: ?>
+            <div class="alert alert-info">
+                <?php echo self::t('No groups yet.'); ?>
+            </div>
+<?php endif; ?>
+        </div> <!-- #tab-content2 -->

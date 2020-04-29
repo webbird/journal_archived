@@ -1,0 +1,27 @@
+                    <select name="group">
+                        <option value="<?php echo urlencode(serialize(array('g'=>'','s'=>$sectionID,'p'=>$pageID))); ?>">
+                            <?php echo self::t('none')." (".self::t('current section')." #".$sectionID ?>)
+                        </option>
+<?php
+    if(isset($data['groups']) && is_array($data['groups']) && count($data['groups'])>0):
+        foreach($data['groups'] as $pID => $sects): // note: current page is on top
+            if($pID != $pageID):
+                        // separator (next page)
+?>
+                        <option disabled="disabled">----- <?php echo self::t('Page'), " ", $pages[$pID], " (", $pID, ")" ?> -----</option>
+<?php
+            endif;
+            foreach($sects as $section_id => $grps):
+                if($sectionID != $section_id):
+                    $id = urlencode(serialize(array('g'=>'','s'=>$section_id,'p'=> $pageID)));
+?>
+                        <option value="<?php echo $id ?>"><?php echo self::t('none')." (".self::t('section')." #".$section_id ?>)</option>
+<?php
+                endif;
+                foreach($grps as $group):
+                    $id = urlencode(serialize(array('g' => intval($group['group_id']), 's' => $section_id, 'p' => $pageID)));
+
+?>
+                        <option value="<?php echo $id ?>"<?php if ($post_data['group_id'] == $group['group_id']): ?> selected="selected"<?php endif; ?>><?php echo $group['title'].' ('.self::t('SECTION').' #'.$section_id ?>)</option>
+<?php endforeach; endforeach; endforeach; endif; ?>
+                    </select>

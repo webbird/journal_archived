@@ -1,5 +1,5 @@
 <?php
 
-$post_content = '[CONTENT]';
+$article_content = '[CONTENT]';
 
 $image_loop = '';

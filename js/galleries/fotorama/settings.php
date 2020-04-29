@@ -1,6 +1,6 @@
 <?php
 
-$post_content = '
+$article_content = '
 [CONTENT]<br />
 <div class="fotorama" data-keyboard="true" data-navposition="top" data-nav="thumbs">
 [IMAGES]

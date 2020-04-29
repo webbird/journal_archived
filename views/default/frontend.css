@@ -1,20 +1,20 @@
 @import url(../../css/utilities/tags.css); 
 @import url(../../css/utilities/colors.css);
 
-.mod_nwi .mod_nwi_metadata {
+.mod_journal .mod_journal_metadata {
     font-size:.7em;
     font-style:italic;
 }
-.mod_nwi div.mod_nwi_box {
+.mod_journal div.mod_journal_box {
     width: 100%;
     border: 1px solid #ccc;
     padding: 0 15px;
     border-radius: 8px;
 }
-.mod_nwi div.mod_nwi_readmore {
+.mod_journal div.mod_journal_readmore {
     float:right;
 }
-.mod_nwi .mod_nwi_readmore a{
+.mod_journal .mod_journal_readmore a{
     display: inline-block;
     background-color: #314B68;
     color: #fff;
@@ -22,15 +22,15 @@
     border-radius: 3px;
     text-decoration: none !important;
 }
-.mod_nwi .mod_nwi_readmore a:hover{
+.mod_journal .mod_journal_readmore a:hover{
     color: #fff;
 }
 
-.mod_nwi td.mod_nwi_table_left,
-.mod_nwi td.mod_nwi_table_center,
-.mod_nwi td.mod_nwi_table_right {
+.mod_journal td.mod_journal_table_left,
+.mod_journal td.mod_journal_table_center,
+.mod_journal td.mod_journal_table_right {
     width:33.33%;
 }
-.mod_nwi table.mod_nwi_table{
+.mod_journal table.mod_journal_table{
     width:100%;
 }

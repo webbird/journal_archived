@@ -15,7 +15,7 @@
 .mod_journal .tabs input[type=radio] {
     display: none;
 }
-.mod_journal .tabs label.tab {
+.mod_journal .tabs label.tab, .mod_journal .tabs label.subtab {
     display: block;
     float: left;
     width: 20%;
@@ -32,6 +32,13 @@
     padding: 5px;
     border: 1px solid #ccc;
 }
+.mod_journal .sub-tab-content {
+    border: 0;
+}
+.mod_journal .tabs label.subtab {
+    border-bottom-width:0;
+    width: 50%;
+}
 .mod_journal div.tabs label.tab i.fa{
     margin-right:5px;
 }
@@ -42,7 +49,7 @@
 .mod_journal .tabs label.tab:hover {
     color: #3498db;
 }
-.mod_journal .tab-content {
+.mod_journal .main-tab-content, .mod_journal .sub-tab-content {
     display: none;
     width: 100%;
     float: left;
@@ -51,7 +58,8 @@
     border: 1px solid #ccc;
     border-top-width: 0;
 }
-.mod_journal .tabs [id^="tab"]:checked + label.tab {
+.mod_journal .tabs [id^="maintab"]:checked + label.tab,
+.mod_journal .tabs [id^="subtab"]:checked + label.subtab {
     color: #3498db;
     font-weight:900;
     box-shadow: 3px -3px 3px #ccc;
@@ -66,4 +74,17 @@
         display: inline-block;
     }
 }
-[type=radio]:checked ~ label ~ .tab-content {z-index: 2;display:block;}
+
+
+.mod_journal #maintab1:checked ~ #main-tab-content1,
+.mod_journal #maintab2:checked ~ #main-tab-content2,
+.mod_journal #maintab3:checked ~ #main-tab-content3,
+.mod_journal #maintab4:checked ~ #main-tab-content4,
+.mod_journal #maintab5:checked ~ #main-tab-content5 {
+    display: block;
+}
+
+.mod_journal #subtab1:checked ~ #sub-tab-content1,
+.mod_journal #subtab2:checked ~ #sub-tab-content2 {
+    display: block;
+}

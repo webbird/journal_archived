@@ -48,13 +48,13 @@
         			</td>
         		</tr>
         		<tr>
-        			<td class="setting_name"><?php echo self::t('Posts per page'); ?>:</td>
+        			<td class="setting_name"><?php echo self::t('Articles per page'); ?>:</td>
         			<td class="setting_value">
-        				<select name="posts_per_page" style="width: 98%;">
+        				<select name="articles_per_page" style="width: 98%;">
         					<option value=""><?php echo self::t('unlimited'); ?></option>
         					<?php
         					for($i = 1; $i <= 20; $i++) {
-        						if($settings['posts_per_page'] == ($i*5)) { $selected = ' selected="selected"'; } else { $selected = ''; }
+        						if($settings['articles_per_page'] == ($i*5)) { $selected = ' selected="selected"'; } else { $selected = ''; }
         						echo '<option value="'.($i*5).'"'.$selected.'>'.($i*5).'</option>';
         					}
         					?>
@@ -70,7 +70,7 @@
         		<tr>
         			<td class="setting_name"><?php echo self::t('Post loop'); ?>:</td>
         			<td class="setting_value">
-        				<textarea name="post_loop" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo ($settings['post_loop']); ?></textarea>
+        				<textarea name="article_loop" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo ($settings['article_loop']); ?></textarea>
         			</td>
         		</tr>
         		<tr>
@@ -87,19 +87,19 @@
         		<tr>
         			<td class="setting_name"><?php echo self::t('Post header'); ?>:</td>
         			<td class="setting_value">
-        				<textarea name="post_header" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['post_header']; ?></textarea>
+        				<textarea name="article_header" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_header']; ?></textarea>
         			</td>
         		</tr>
                 <tr>
         			<td class="setting_name"><?php echo self::t('Post content'); ?>:</td>
         			<td class="setting_value">
-        				<textarea name="post_content" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['post_content']; ?></textarea>
+        				<textarea name="article_content" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_content']; ?></textarea>
         			</td>
         		</tr>
         		<tr>
         			<td class="setting_name"><?php echo self::t('Post footer'); ?>:</td>
         			<td class="setting_value">
-        				<textarea name="post_footer" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['post_footer']; ?></textarea>
+        				<textarea name="article_footer" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_footer']; ?></textarea>
         			</td>
         		</tr>
 <?php if($settings['mode']=='advanced'): ?>

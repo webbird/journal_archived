@@ -1,7 +1,7 @@
 <div class="mod_journal">
 
     <h2><?php echo $MOD_NEWS_IMG['MANAGE_POSTS']; ?></h2>
-    <form name="manage" action="<?php echo WB_URL; ?>/modules/journal/manage_posts.php" method="post" enctype="multipart/form-data">
+    <form name="manage" action="<?php echo WB_URL; ?>/modules/journal/manage_articles.php" method="post" enctype="multipart/form-data">
 <?php echo \CAT\Addon\junction::admin()->getFTAN(); ?>
     <input type="hidden" name="section_id" value="<?php echo $section_id; ?>" />
     <input type="hidden" name="page_id" value="<?php echo $page_id; ?>" />
@@ -28,9 +28,9 @@
 ?></h3>
                     <ul>
 <?php
-    foreach($posts as $pid => $title):
+    foreach($articles as $pid => $title):
         if(is_numeric($pid)):
-            echo "<li><input type=\"checkbox\" name=\"manage_posts[]\" value=\"$pid\" checked=\"checked\" /> ID #$pid - $title</li>";
+            echo "<li><input type=\"checkbox\" name=\"manage_articles[]\" value=\"$pid\" checked=\"checked\" /> ID #$pid - $title</li>";
         endif;
     endforeach;
 ?></ul>

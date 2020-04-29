@@ -1,8 +1,8 @@
 <?php
-    $add_post_button = '<input type="submit" class="btn btn-primary" name="mod_nwi_add_post" value="' . self::t('Add post') . '" />';
+    $add_article_button = '<input type="submit" class="btn btn-primary" name="mod_journal_add_post" value="' . self::t('Add post') . '" />';
 ?>
         <div id="main-tab-content1" class="main-tab-content">
-<?php if(count($data['posts'])>0): if(count($data['posts'])>20): echo $add_post_button; endif; ?>
+<?php if(count($data['articles'])>0): if(count($data['articles'])>20): echo $add_article_button; endif; ?>
             <div style="text-align:right;font-style:italic">
                 <?php echo self::t('Order by'), ": <span class=\"\" title=\"", ( $settings['view_order']=='0' ? self::t('The setting &quot;custom&quot; allows the manual sorting of articles via up/down arrows.') : '') ,"\">", $data['lang_map'][$settings['view_order']] ?></span>
             </div>
@@ -11,7 +11,7 @@
                 <?php echo self::admin()->getFTAN(); ?>
                 <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
                 <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
-<?php if(count($data['posts'])>0): ?>
+<?php if(count($data['articles'])>0): ?>
                 <div class="scrollable">
                     <table class="table table-sm table-striped dragdrop_form" id="mod_news_post_list">
                         <thead class="thead-dark">
@@ -27,30 +27,30 @@
                                 <th></th>
                                 <th></th>
                                 <th></th>
-                                <th><input type="checkbox" name="manage_posts_all" id="<?php echo $sectionID; ?>_all" value="all" onchange='javascript: var boxes = document.forms["modify_<?php echo $sectionID; ?>"].elements[ "manage_posts[]" ]; for (var i=0, len=boxes.length; i<len; i++) { boxes[i].checked = this.checked;}' /></th>
+                                <th><input type="checkbox" name="manage_articles_all" id="<?php echo $sectionID; ?>_all" value="all" onchange='javascript: var boxes = document.forms["modify_<?php echo $sectionID; ?>"].elements[ "manage_articles[]" ]; for (var i=0, len=boxes.length; i<len; i++) { boxes[i].checked = this.checked;}' /></th>
                                 <th></th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-<?php foreach($data['posts'] as $post): ?>
-                            <tr id="post_id:<?php echo $post['post_id']; ?>">
+<?php foreach($data['articles'] as $post): ?>
+                            <tr id="article_id:<?php echo $post['article_id']; ?>">
                                 <td<?php if ($settings['view_order'] == 0): echo ' class="dragdrop_item"'; endif; ?>>&nbsp;</td>
                                 <td>
-                                    <a href="<?php echo $data['edit_url'] ?>post_id=<?php echo $post['post_id']; ?>" title="<?php echo self::t('Modify') ?>">
+                                    <a href="<?php echo $data['edit_url'] ?>article_id=<?php echo $post['article_id']; ?>" title="<?php echo self::t('Modify') ?>">
                                         <span class="fa fa-fw fa-edit"></span>
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="<?php echo $data['edit_url'] ?>post_id=<?php echo $post['post_id']; ?>">
-                                        <span title="Post ID <?php echo $post['post_id'] ?>"><?php echo $post['title']; ?></span>
+                                    <a href="<?php echo $data['edit_url'] ?>article_id=<?php echo $post['article_id']; ?>">
+                                        <span title="Post ID <?php echo $post['article_id'] ?>"><?php echo $post['title']; ?></span>
                                     </a>
                                 </td>
                                 <td>
                                     <?php echo $post['group_title'] ?>
                                 </td>
                                 <td>
-                                    <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>post_id=<?php echo $post['post_id']; ?>&amp;active=<?php echo $post['active']!=0 ? '0':'1'; ?>');" title="<?php if ($post['active'] == 1): echo self::t('Deactivate post'); else: echo self::t('Activate post'); endif;?>">
+                                    <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>article_id=<?php echo $post['article_id']; ?>&amp;active=<?php echo $post['active']!=0 ? '0':'1'; ?>');" title="<?php if ($post['active'] == 1): echo self::t('Deactivate post'); else: echo self::t('Activate post'); endif;?>">
 <?php if ($post['active'] == 1): ?>
                                     <span class="fa fa-fw fa-eye nwi-active"></span>
 <?php else: ?>
@@ -71,7 +71,7 @@
                                 </td>
                                 <td>
 <?php if (($post['position'] != 1) && ($settings['view_order'] == 0)): ?>
-                                    <a href="<?php echo $data['edit_url'] ?>post_id=<?php echo $post['post_id']; ?>&amp;move=up" title="<?php echo self::t('Move up') ?>">
+                                    <a href="<?php echo $data['edit_url'] ?>article_id=<?php echo $post['article_id']; ?>&amp;move=up" title="<?php echo self::t('Move up') ?>">
                                         <span class="fa fa-fw fa-arrow-circle-up mod_journal_arrow"></span>
                                     </a>
 <?php else: ?>
@@ -79,8 +79,8 @@
 <?php endif; ?>
                                 </td>
                                 <td>
-<?php  if (($post['position'] != $data['num_posts'])&&($settings['view_order'] == 0)): ?>
-                                    <a href="<?php echo $data['edit_url'] ?>post_id=<?php echo $post['post_id']; ?>&amp;move=down" title="<?php echo self::t('Move down') ?>">
+<?php  if (($post['position'] != $data['num_articles'])&&($settings['view_order'] == 0)): ?>
+                                    <a href="<?php echo $data['edit_url'] ?>article_id=<?php echo $post['article_id']; ?>&amp;move=down" title="<?php echo self::t('Move down') ?>">
                                         <span class="fa fa-fw fa-arrow-circle-down mod_journal_arrow"></span>
                                     </a>
 <?php else: ?>
@@ -88,10 +88,10 @@
 <?php endif; ?>
                                 </td>
                                 <td>
-                                    <input type="checkbox" name="manage_posts[]" value="<?php echo $post['post_id'] ?>" onchange='javascript: document.getElementById("<?php echo $sectionID ?>_all").checked &= this.checked' />
+                                    <input type="checkbox" name="manage_articles[]" value="<?php echo $post['article_id'] ?>" onchange='javascript: document.getElementById("<?php echo $sectionID ?>_all").checked &= this.checked' />
                                 </td>
                                 <td>
-                                    <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/delete_post.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;post_id=<?php echo $post['post_id']; ?>');" title="<?php echo self::t('Delete') ?>">
+                                    <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/delete_post.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;article_id=<?php echo $post['article_id']; ?>');" title="<?php echo self::t('Delete') ?>">
                                         <span class="fa fa-fw fa-close nwi-delete"></span>
                                     </a>
                                 </td>
@@ -106,7 +106,7 @@
                 <table class="table table-sm">
                     <tr style="background-color:transparent">
                         <td>
-<?php echo $add_post_button ?>
+<?php echo $add_article_button ?>
                         </td>
                         <td style="text-align:right">
                             <div class="mod_news_post_tools"><?php echo self::t('Action') ?>:
@@ -122,12 +122,12 @@
                                     <option value="tags"><?php echo self::t('Assign tags') ?></option>
                                     <option value="group"><?php echo self::t('Assign group') ?></option>
                                 </select>
-                                <input name="continue" type="submit" onclick="return checkActionAndPosts()" value="<?php echo self::t('Continue') ?>" />
+                                <input name="continue" type="submit" onclick="return checkActionAndArticles()" value="<?php echo self::t('Continue') ?>" />
                              </div>
                         </td>
                     </tr>
                 </table>
-<?php else: echo $add_post_button; endif; ?>
+<?php else: echo $add_article_button; endif; ?>
             </form>
 
             <script type="text/javascript">

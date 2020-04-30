@@ -21,7 +21,7 @@ require_once __DIR__.'/inc/class.journal.php';
 if(is_object($wb)) {
     $section = $wb->get_section_details($section_id);
     \CAT\Addon\journal::initialize($section);
-    echo \CAT\Addon\journal::addPost();
+    echo \CAT\Addon\journal::addArticle();
 } else {
     echo "oh no!";
     exit;

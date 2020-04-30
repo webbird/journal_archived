@@ -1,12 +1,9 @@
 /* ===== DRAG & DROP ===== */
 .mod_journal .dragdrop_handle {
     background-color: #ccc;
-    background-image: url("images/dd_grip.gif");
+    background-image: url("images/dd_grip.png");
     background-position: right center;
     cursor: move;
     padding: 0;
     width: 20px !important;
-    border-style: solid;
-    border-width: 2px 2px 3px;
-    border-color: #cad2d9 #bac5ce
 }

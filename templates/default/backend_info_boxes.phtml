@@ -1,0 +1,7 @@
+<?php if(!empty(self::$errors)): ?>
+            <div class="alert alert-danger">
+                <?php echo self::t('Please note').':<br />'.implode("<br />",self::$errors); ?>
+            </div>
+<?php endif; if(!empty(self::$info)): ?>
+            <div class="alert alert-info"><?php echo $data['info'] ?></div>
+<?php endif; ?>

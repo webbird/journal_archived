@@ -177,7 +177,7 @@ if(!class_exists('cmsbridge',false))
             } elseif(CMSBRIDGE_CMS_WBCE) {
                 return gmdate(TIME_FORMAT, $time+TIMEZONE);
             } else {
-                return $date;
+                return $time;
             }
         }   // end function formatTime()
 

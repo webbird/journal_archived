@@ -35,7 +35,7 @@
                 <tbody>
 <?php foreach($data['groups'] as $group): ?>
                     <tr id="group_id:<?php echo $group['id_key']; ?>">
-                        <td class="dragdrop_item">&nbsp;</td>
+                        <td<?php if(count($data['groups'])>1): ?> class="dragdrop_handle"<?php endif; ?>>&nbsp;</td>
                         <td style="width:20px">
                             <a href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Modify') ?>">
                                 <span class="fa fa-fw fa-edit"></span>
@@ -47,7 +47,9 @@
                             </a>
                         </td>
                         <td style="width:150px">
-                            <span class="fa fa-fw <?php if ($group['active'] == 1): ?>fa-eye nwi-active<?php else: ?>fa-eye-slash nwi-inactive<?php endif; ?>"></span>
+<a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>tab=g&amp;group_id=<?php echo $group['group_id']; ?>&amp;active=<?php echo $group['active']!=0 ? '0':'1'; ?>');" title="<?php if ($group['active'] == 1): echo self::t('Deactivate group'); else: echo self::t('Activate group'); endif;?>">
+                            <span class="fa fa-fw <?php if ($group['active'] == 1): ?>fa-eye<?php else: ?>fa-eye-slash<?php endif; ?>"></span>
+</a>
                         </td>
                         <td>
                         <?php if(strlen($group['image'])>0): ?>

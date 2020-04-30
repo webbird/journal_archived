@@ -39,8 +39,8 @@
         				<select name="view_order" style="width: 98%;">
         					<?php
         					echo '<option value="0"'.(($settings['view_order'] == 0)?' selected="selected"':'').'>'.self::t('Custom').'</option>';
-        					echo '<option value="1"'.(($settings['view_order'] == 1)?' selected="selected"':'').'>'.self::t('Pub. start').' ('.self::t('Descending').' = '.self::t('most recent on top').')</option>';
-        					echo '<option value="2"'.(($settings['view_order'] == 2)?' selected="selected"':'').'>'.self::t('Pub. end').' ('.self::t('Descending').' = '.self::t('first expiring last').')</option>';
+        					echo '<option value="1"'.(($settings['view_order'] == 1)?' selected="selected"':'').'>'.self::t('Starting date').' ('.self::t('Descending').' = '.self::t('most recent on top').')</option>';
+        					echo '<option value="2"'.(($settings['view_order'] == 2)?' selected="selected"':'').'>'.self::t('Expiry date').' ('.self::t('Descending').' = '.self::t('first expiring last').')</option>';
         					echo '<option value="3"'.(($settings['view_order'] == 3)?' selected="selected"':'').'>'.self::t('Submitted').' ('.self::t('Descending').' = '.self::t('most recent on top').')</option>';
         					echo '<option value="4"'.(($settings['view_order'] == 4)?' selected="selected"':'').'>'.self::t('ID').' ('.self::t('Descending').' = '.self::t('most recent on top').')</option>';
         					?>

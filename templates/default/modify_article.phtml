@@ -1,5 +1,6 @@
 <?php include 'backend_header.phtml'; ?>
-    <h2><?php echo self::t('Write post') ?></h2>
+    <h2><?php echo self::t('Write article') ?></h2>
+<?php include 'backend_info_boxes.phtml'; ?>
     <div class="jsadmin jcalendar hide"></div>
     <form name="modify" action="<?php echo $data['form_edit_url'] ?>" method="post" enctype="multipart/form-data">
         <?php echo self::admin()->getFTAN(); ?>
@@ -12,27 +13,17 @@
                 <tr>
                 	<td class="setting_name"><?php echo self::t('Title'); ?>:</td>
                 	<td class="setting_value">
-                		<input type="text" name="title" id="title<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['title'])); ?>" maxlength="255" />
+                		<input type="text" name="title" id="title<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['title'])); ?>" maxlength="255"<?php if(isset(self::$highlighted['title'])): ?> class="border-danger"<?php endif; ?> />
                 	</td>
                 </tr>
                 <tr<?php if($settings['mode']!='advanced'): ?> style="display:none"<?php endif; ?>>
                 	<td class="setting_name"><?php echo self::t('Link'); ?>:</td>
                 	<td class="setting_value">
-                		<?php echo $data['linkbase'] ?>/<input type="text" name="link" id="link<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['link'])); ?>" maxlength="255" style="width:80%" /><?php echo PAGE_SPACER.$data['article_id'].PAGE_EXTENSION; ?>
+                		<?php echo $data['linkbase'] ?>
+                        <input type="text" name="link" id="link<?php echo $pageID ?>" value="<?php echo(htmlspecialchars($data['link'])); ?>" maxlength="255"<?php if(isset(self::$highlighted['link'])): ?> class="border-danger"<?php endif; ?> style="width:70%" />
+                        <?php echo PAGE_SPACER.$data['article_id'].PAGE_EXTENSION; ?>
                 	</td>
                 </tr>
-<?php if ($data['image'] != ""): ?>
-                <tr>
-                	<td class="setting_name"><?php echo self::t('Preview image'); ?>:</td>
-                	<td>
-                        <img class="img_list" style="float:left;margin-right:15px" src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA."/".JOURNAL_IMAGE_SUBDIR."/".$data['image'] ?>" /> <?php echo $data['image'] ?><br />
-                        <a class="btn" href="javascript:confirm_link('<?php echo self::t('ARE_YOU_SURE'), '\n', self::t('This will reload the page; all unsaved data will be lost!'); ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/modify_post.php?page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&post_img=<?php echo $data['image'] ?>');">
-                            <i class="fa fa-fw fa-trash"></i> <?php echo self::t('Delete') ?>
-                        </a><br />
-                        <?php echo self::t('To select a different post image, please mark the desired image at the bottom of the list.'); ?>
-            		</td>
-                </tr>
-<?php endif; ?>
                 <tr>
                     <td class="setting_name"><?php echo self::t('Group'); ?>:</td>
                     <td class="setting_value">
@@ -54,18 +45,18 @@
                 	</td>
                 </tr>
                 <tr>
-                	<td class="setting_name"><?php echo self::t('Pub. start'); ?>:</td>
+                	<td class="setting_name"><?php echo self::t('Starting date'); ?>:</td>
                 	<td class="setting_value">
-                	    <input type="text" id="publishdate" name="publishdate" data-field="datetime" value="<?php echo $data['publishing_date']; ?>" style="width:33%;" />
+                	    <input type="text" id="publishdate" name="publishdate" data-field="datetime" value="<?php echo $data['publishing_date']; ?>" style="width:33%;"<?php if(isset(self::$highlighted['publishdate'])): ?> class="border-danger"<?php endif; ?> />
                         <i class="far fa-calendar" id="publishdate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
                     	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
                         <div id="dtBox_<?php echo $sectionID ?>_1"></div>
                 	</td>
                 </tr>
                 <tr>
-                	<td class="setting_name"><?php echo self::t('Pub. end'); ?>:</td>
+                	<td class="setting_name"><?php echo self::t('Expiry date'); ?>:</td>
                 	<td class="setting_value">
-                	    <input type="text" id="enddate" name="enddate" data-field="datetime" value="<?php echo $data['publishing_end_date'] ; ?>" style="width:33%;" />
+                	    <input type="text" id="enddate" name="enddate" data-field="datetime" value="<?php echo $data['publishing_end_date'] ; ?>" style="width:33%;"<?php if(isset(self::$highlighted['enddate'])): ?> class="border-danger"<?php endif; ?> />
                     	<i class="far fa-calendar" id="enddate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
                     	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
                         <div id="dtBox_<?php echo $sectionID ?>_2"></div>
@@ -159,7 +150,7 @@
                             <input type="text" name="picdesc[<?php echo $image['id'] ?>]" value="<?php echo htmlspecialchars($image["picdesc"]) ?>">
                         </td>
                         <td>
-                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo CMSBRIDGE_CMS_URL ?>/modules/journal/modify_post.php?page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&img_id=<?php echo $image['id'] ?>#fs">
+                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&img_id=<?php echo $image['id'] ?>#fs">
                                 <i class="fa fa-fw fa-trash text-danger"></i>
                             </a>
                         </td>
@@ -173,7 +164,7 @@
 
 
 <?php
-    include __DIR__.'/modify_post_upload_form.phtml';
+    include __DIR__.'/modify_article_upload_form.phtml';
     include __DIR__.'/../../js/datetimepickers/xdsoft/include.phtml';
 ?>
 </div><!-- /mod_journal -->

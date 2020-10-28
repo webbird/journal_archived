@@ -7,6 +7,9 @@ $aJsonRespond['success'] = false;
 $aJsonRespond['message'] = '';
 $aJsonRespond['icon'] = '';
 
+const MIN_WB_VERSION = '2.8.3';
+const INVALID_VALUE_MSG = 'invalid value';
+
 
 if (!isset($_POST['action']) || !isset($_POST['post_id']) && !isset($_POST['group_id']) && !isset($_POST['img_id'])) {
     $aJsonRespond['message'] = 'one of the parameters does not exist';
@@ -30,14 +33,14 @@ if (!isset($_POST['action']) || !isset($_POST['post_id']) && !isset($_POST['grou
             foreach ($aRows as $recID) {
                 if(!defined('CAT_PATH')) {
                     $id = $admin->checkIDKEY($recID, 0, 'key', true);
-                    if (defined('WB_VERSION') && (version_compare(WB_VERSION, '2.8.3', '>'))) {
+                    if (defined('WB_VERSION') && (version_compare(WB_VERSION, MIN_WB_VERSION, '>'))) {
                         $id = $recID;
                     }
                 } else {
                     $id = intval($recID);
                 }
                 if ($id<=0) {
-                    $aJsonRespond['message'] = 'invalid value';
+                    $aJsonRespond['message'] = INVALID_VALUE_MSG;
                     exit(json_encode($aJsonRespond));
                 }
                 // now we sanitize array
@@ -55,14 +58,14 @@ if (!isset($_POST['action']) || !isset($_POST['post_id']) && !isset($_POST['grou
             foreach ($aRows as $recID) {
                 if(!defined('CAT_PATH')) {
                 $id = $admin->checkIDKEY($recID, 0, 'key', true);
-                if (defined('WB_VERSION') && (version_compare(WB_VERSION, '2.8.3', '>'))) {
+                if (defined('WB_VERSION') && (version_compare(WB_VERSION, MIN_WB_VERSION, '>'))) {
                     $id = $recID;
                     }
                 } else {
                     $id = intval($recID);
                 }
                 if ($id<=0) {
-                    $aJsonRespond['message'] = 'invalid value';
+                    $aJsonRespond['message'] = INVALID_VALUE_MSG;
                     exit(json_encode($aJsonRespond));
                 }
                 // now we sanitize array
@@ -77,11 +80,11 @@ if (!isset($_POST['action']) || !isset($_POST['post_id']) && !isset($_POST['grou
             $i = 1;
             foreach ($aRows as $recID) {
                 $id = $admin->checkIDKEY($recID, 0, 'key', true);
-                if (defined('WB_VERSION') && (version_compare(WB_VERSION, '2.8.3', '>'))) {
+                if (defined('WB_VERSION') && (version_compare(WB_VERSION, MIN_WB_VERSION, '>'))) {
                     $id = $recID;
                 }
                 if ($id<=0) {
-                    $aJsonRespond['message'] = 'invalid value';
+                    $aJsonRespond['message'] = INVALID_VALUE_MSG;
                     exit(json_encode($aJsonRespond));
                 }
                 // now we sanitize array

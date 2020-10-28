@@ -491,7 +491,8 @@ if(!class_exists('journal',false))
 
                     // move to media folder
                     $src = $dir.'/'.$filename;
-                    if (true===move_uploaded_file($picture['tmp_name'], $src)) {
+                    $tmpfile = $picture['tmp_name'];
+                    if (is_uploaded_file($tmpfile) && true===move_uploaded_file($tmpfile, $src)) {
                         // can we resize the image and create a thumbnail?
                         if(extension_loaded('gd') && function_exists('getimagesize')) {
                             $crop = ($settings['crop']=='Y');
@@ -1493,7 +1494,7 @@ require(WB_PATH."/index.php");
         {
             $stmt = cmsbridge::db()->query(sprintf(
                 "SELECT max(`position`) AS `position` FROM `%s%s` "
-                . "WHERE `$s`=%d",
+                . "WHERE `%s`=%d",
                 cmsbridge::dbprefix(), self::$tables[$table], $field, $ID
             ));
             if(!empty($stmt)) {
@@ -1975,7 +1976,7 @@ require(WB_PATH."/index.php");
             #}
             #$article['article_img'] = $article_img;
 
-            // article link
+            // article links
             $article['article_link'] = cmsbridge::getPageLink(self::$page['route'].'/'.$article['link']);
             $article['article_path'] = str_ireplace(CMSBRIDGE_CMS_URL, CMSBRIDGE_CMS_PATH, $article['article_link']);
             $article['next_link'] = (isset($article['next_link']) && strlen($article['next_link'])>0 ? cmsbridge::getPageLink(self::$page['route'].'/'.$article['next_link']) : null);
@@ -1988,7 +1989,7 @@ require(WB_PATH."/index.php");
                 // check if group exists
                 $gid = intval($_GET['g']);
                 if(self::groupExists($gid)) {
-                    if (isset($_GET['p']) and $position > 0) {
+                    if (isset($_GET['p']) and $article['position'] > 0) {
                         $delim = '&amp;';
                     } else {
                         $delim = '?';
@@ -2895,7 +2896,6 @@ require(WB_PATH."/index.php");
                             case 'imgmaxsize':
                                 $val = intval($_REQUEST[$var]) * 1024;
                                 break;
-                            case 'article_content':
                             case 'image_loop':
                                 // ignore if gallery has changed
                                 if(!$new_gallery) {

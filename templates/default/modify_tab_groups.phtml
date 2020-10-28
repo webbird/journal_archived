@@ -11,11 +11,7 @@
                 <input name="add_group" id="add_group" type="submit" value="<?php echo self::t('Save') ?>" />
             </form><br />
 
-<?php if(strlen($data['error'])): ?>
-            <div class="alert alert-danger"><?php echo $data['error'] ?></div>
-<?php endif; if(strlen($data['info'])): ?>
-            <div class="alert alert-info"><?php echo $data['info'] ?></div>
-<?php endif; ?>
+<?php include 'backend_info_boxes.phtml'; ?>
 
 <?php if(isset($data['groups']) && is_array($data['groups']) && count($data['groups'])>0): ?>
             <table class="table table-sm table-striped dragdrop_form">
@@ -33,16 +29,16 @@
                     </tr>
                 </thead>
                 <tbody>
-<?php foreach($data['groups'] as $group): ?>
-                    <tr id="group_id:<?php echo $group['id_key']; ?>">
-                        <td<?php if(count($data['groups'])>1): ?> class="dragdrop_handle"<?php endif; ?>>&nbsp;</td>
+<?php $curr = 1; $max = count($data['groups']); foreach($data['groups'] as $group): ?>
+                    <tr id="group_id:<?php echo $group['group_id']; ?>">
+                        <td style="width:20px"<?php if(count($data['groups'])>1): ?> class="dragdrop_handle"<?php endif; ?>><i class="fa fas fa-fw fa-arrows-alt-v"></i></td>
                         <td style="width:20px">
-                            <a href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Modify') ?>">
+                            <a href="<?php echo $data['edit_url'] ?>section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['group_id']; ?>&amp;tab=g" title="<?php echo self::t('Modify') ?>">
                                 <span class="fa fa-fw fa-edit"></span>
                             </a>
                         </td>
                         <td>
-                            <a href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>">
+                            <a href="<?php echo $data['edit_url'] ?>section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['group_id']; ?>&amp;tab=g">
                                 <?php echo $group['title'].' (ID: '.$group['group_id'].')'; ?>
                             </a>
                         </td>
@@ -62,21 +58,21 @@
                         <?php endif; ?>
                         </td>
                         <td style="width:20px">
-                            <?php if ($group['position'] != 1): ?>
-                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_up.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Move up') ?>">
+<?php if ($curr!=1 && $max>1): ?>
+                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_up.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['group_id']; ?>" title="<?php echo self::t('Move up') ?>">
                                 <span class="fa fa-fw fa-arrow-circle-up mod_journal_arrow"></span>
                             </a>
-                            <?php endif; ?>
+<?php endif; ?>
                         </td>
                         <td style="width:20px">
-                            <?php if ($group['position'] != $data['num_groups']): ?>
-                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_down.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['id_key']; ?>" title="<?php echo self::t('Move down') ?>">
+<?php if ($max>1 && $curr<$max): ?>
+                            <a href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/move_down.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $group['group_id']; ?>" title="<?php echo self::t('Move down') ?>">
                                 <span class="fa fa-fw fa-arrow-circle-down mod_journal_arrow"></span>
                             </a>
-                        <?php endif; ?>
+<?php endif; $curr++; ?>
                         </td>
                         <td style="width:20px">
-                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;del_group=<?php echo $group['id_key']; ?>&amp;tab=g');" title="<?php echo self::t('Delete') ?>">
+                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID; ?>&amp;del_group=<?php echo $group['group_id']; ?>&amp;tab=g');" title="<?php echo self::t('Delete') ?>">
                                 <span class="fa fa-fw fa-trash text-danger"></span>
                             </a>
                         </td>

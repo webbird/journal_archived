@@ -1,42 +1,37 @@
-        <div id="main-tab-content4" class="main-tab-content">
-            <h2><?php echo self::t('Options') ?></h2>
-            <form name="modify_mode" action="<?php $data['edit_url']; ?>" method="post">
-                <?php echo self::admin()->getFTAN(); ?>
-                <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
-            	<input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
-                <input type="hidden" name="tab" value="o" />
+    <div id="main-tab-content4" class="main-tab-content">
+        <form name="modify_mode" action="<?php $data['edit_url']; ?>" method="post">
+            <?php echo self::admin()->getFTAN(); ?>
+            <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
+        	<input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+            <input type="hidden" name="tab" value="o" />
 <?php if($settings['mode']=='advanced'): ?>
-                <input type="hidden" name="mode" value="default" />
+            <input type="hidden" name="mode" value="default" />
 <?php else: ?>
-                <input type="hidden" name="mode" value="advanced" />
+            <input type="hidden" name="mode" value="advanced" />
 <?php endif; ?>
-                <?php echo self::t('expert mode') ?>
-                <label class="switch">
-                  <input id="toggle_mode" type="checkbox"<?php if($settings['mode']=='advanced'): ?> checked="checked"<?php endif; ?>/>
-                  <span class="slider round"></span>
-                </label>
-            </form>
+            <?php echo self::t('expert mode') ?>
+            <label class="switch">
+              <input id="toggle_mode" type="checkbox"<?php if($settings['mode']=='advanced'): ?> checked="checked"<?php endif; ?>/>
+              <span class="slider round"></span>
+            </label>
+        </form>
 
-<?php if(!empty(self::$errors)): ?>
-            <div class="alert alert-danger"><?php echo implode("<br />",self::$errors); ?></div>
-<?php endif; if(strlen($data['info'])): ?>
-            <div class="alert alert-info"><?php echo $data['info'] ?></div>
-<?php endif; ?>
 
-    <form name="modify" action="<?php echo $data['edit_url'] ?>" method="post">
-        <?php echo self::admin()->getFTAN(); ?>
+    <?php include 'backend_info_boxes.phtml'; ?>
+
+    <form name="modify" id="mod_journal_settings_<?php echo $sectionID ?>" action="<?php echo $data['edit_url'] ?>" method="post">
     	<input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
     	<input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
         <input type="hidden" name="tab" value="o" />
     	<table class="table table-sm">
             <thead>
-                <tr><th colspan="2"><?php echo self::t('Overview page settings')?></th></tr>
+                <tr><th colspan="2"><?php echo self::t('Common settings')?></th></tr>
             </thead>
             <tbody>
         		<tr>
         			<td class="setting_name"><?php echo self::t('Order by'); ?>:</td>
         			<td class="setting_value">
-        				<select name="view_order" style="width: 98%;">
+        				<select name="view_order" id="view_order_<?php echo $sectionID ?>">
         					<?php
         					echo '<option value="0"'.(($settings['view_order'] == 0)?' selected="selected"':'').'>'.self::t('Custom').'</option>';
         					echo '<option value="1"'.(($settings['view_order'] == 1)?' selected="selected"':'').'>'.self::t('Starting date').' ('.self::t('Descending').' = '.self::t('most recent on top').')</option>';
@@ -50,7 +45,7 @@
         		<tr>
         			<td class="setting_name"><?php echo self::t('Articles per page'); ?>:</td>
         			<td class="setting_value">
-        				<select name="articles_per_page" style="width: 98%;">
+        				<select name="articles_per_page" id="articles_per_page_<?php echo $sectionID ?>">
         					<option value=""><?php echo self::t('unlimited'); ?></option>
         					<?php
         					for($i = 1; $i <= 20; $i++) {
@@ -61,78 +56,10 @@
         				</select>
         			</td>
         		</tr>
-	           	<tr>
-        			<td class="setting_name"><?php echo self::t('Header'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="header" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo ($settings['header']); ?></textarea>
-        			</td>
-        		</tr>
-        		<tr>
-        			<td class="setting_name"><?php echo self::t('Post loop'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="article_loop" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo ($settings['article_loop']); ?></textarea>
-        			</td>
-        		</tr>
-        		<tr>
-        			<td class="setting_name"><?php echo self::t('Footer'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="footer" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo $settings['footer']; ?></textarea>
-        			</td>
-        		</tr>
-            </tbody>
-            <thead>
-        		<tr><th colspan="2"><?php echo self::t('Post settings')?></th></tr>
-            </thead>
-            <tbody>
-        		<tr>
-        			<td class="setting_name"><?php echo self::t('Post header'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="article_header" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_header']; ?></textarea>
-        			</td>
-        		</tr>
-                <tr>
-        			<td class="setting_name"><?php echo self::t('Post content'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="article_content" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_content']; ?></textarea>
-        			</td>
-        		</tr>
-        		<tr>
-        			<td class="setting_name"><?php echo self::t('Post footer'); ?>:</td>
-        			<td class="setting_value">
-        				<textarea name="article_footer" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['article_footer']; ?></textarea>
-        			</td>
-        		</tr>
-<?php if($settings['mode']=='advanced'): ?>
-                <tr>
-        			<td class="setting_name"><?php echo self::t('Append post title to page title'); ?>:</td>
-        			<td class="setting_value">
-        				<input type="checkbox" name="append_title" VALUE="Y"<?php if($settings['append_title']=='Y'): ?> checked="checked"<?php endif; ?> />
-                        <?php echo self::t('Yes') ?> <i>(<?php echo self::t('This will append the post title to the page title') ?>)</i>
-        			</td>
-        		</tr>
-                <tr>
-        			<td class="setting_name"><?php echo self::t('Use second block'); ?>:</td>
-        			<td class="setting_value">
-        				<input type="checkbox" name="use_second_block" VALUE="Y"<?php if($settings['use_second_block']=='Y'): ?> checked="checked"<?php endif; ?> />
-                        <?php echo self::t('Yes') ?> <i>(<?php echo self::t('Must be supported by the template') ?>)</i>
-        			</td>
-        		</tr>
-        		<tr class="nwi_use_second_block"<?php if($settings['use_second_block']!='Y'): ?> style="display:none"<?php endif; ?>>
-        			<td class="setting_name"><?php echo self::t('Block'); ?> 2:</td>
-        			<td class="setting_value">
-        				<textarea name="block2" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo $settings['block2']; ?></textarea>
-        			</td>
-        		</tr>
-<?php endif; ?>
-            </tbody>
-            <thead>
-                <tr><th colspan="2"><?php echo self::t('Gallery settings')?></th></tr>
-            </thead>
-            <tbody>
                 <tr>
         			<td class="setting_name"><?php echo self::t('Gallery') ?>:</td>
         			<td class="setting_value">
-                        <select name="gallery" style="width: 98%;" onfocus="this.setAttribute('PrvSelectedValue',this.value);" onchange="if(confirm('<?php echo self::t('Are you sure? Note that customized settings for the image loop markup will get lost.')?>')==false){ this.value=this.getAttribute('PrvSelectedValue');return false; }" >
+                        <select name="gallery" id="gallery_<?php echo $sectionID ?>">
                             <option value="fotorama"<?php if($settings['gallery']=='fotorama'): ?> selected="selected"<?php endif; ?>>Fotorama</option>
                             <option value="masonry"<?php if($settings['gallery']=='masonry'): ?> selected="selected"<?php endif; ?>>Masonry</option>
 							<option value="lightcase" <?php if($settings['gallery']=='lightcase'): ?> selected="selected"<?php endif; ?>>Lightcase</option>
@@ -140,7 +67,145 @@
                         </select>
         			</td>
         		</tr>
-<?php if($settings['mode']=='advanced'): ?>
+
+            </tbody>
+<?php
+    if($settings['mode']=='advanced'):
+        if(file_exists(CMSBRIDGE_CMS_PATH . '/include/editarea/wb_wrapper_edit_area.php')) {
+            include_once CMSBRIDGE_CMS_PATH . '/include/editarea/wb_wrapper_edit_area.php';
+            echo registerEditArea ('header_'.$sectionID,'html',false,'both',true,true,600,100);
+            echo registerEditArea ('article_loop_'.$sectionID,'html',false,'both',true,true,600,200);
+            echo registerEditArea ('footer_'.$sectionID,'html',false,'both',true,true,600,100);
+        }
+        if(CMSBRIDGE_CMS_BC2) {
+/*
+            string $id,
+            string $syntax           = 'php',
+        	int    $min_width        = 600,
+        	int    $min_height       = 300,
+        	string $toolbar          = '',
+        	bool   $syntax_selection = true,
+        	string $allow_resize     = 'both',
+        	bool   $allow_toggle     = true,
+        	bool   $start_highlight  = true
+*/
+            require_once CMSBRIDGE_CMS_PATH.'/'.CAT_MODULES_FOLDER.'/lib_editarea/inc/class.editarea.php';
+            \CAT\Addon\editarea::showEditArea('header_'.$sectionID,'html',600,100);
+            \CAT\Addon\editarea::showEditArea('article_loop_'.$sectionID,'html',600,200);
+            \CAT\Addon\editarea::showEditArea('footer_'.$sectionID,'html',600,100);
+            \CAT\Addon\editarea::showEditArea('article_header_'.$sectionID,'html',600,100);
+            \CAT\Addon\editarea::showEditArea('article_content_'.$sectionID,'html',600,200);
+            \CAT\Addon\editarea::showEditArea('article_footer_'.$sectionID,'html',600,100);
+            \CAT\Addon\editarea::showEditArea('tag_loop_'.$sectionID,'html',600,100);
+            \CAT\Addon\editarea::showEditArea('image_loop_'.$sectionID,'html',600,200);
+        }
+?>
+            <thead>
+                <tr><th colspan="2"><?php echo self::t('Advanced settings')?></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+        			<td class="setting_name"><?php echo self::t('Presentation / View'); ?>:</td>
+        			<td class="setting_value">
+        				<select name="view" id="view_<?php echo $sectionID ?>">
+<?php if(is_array($data['views'])): foreach(array_values($data['views']) as $v): ?>
+                            <option value="<?php echo $v ?>"<?php if($settings['view']==$v): ?> selected="selected"<?php endif; ?>><?php echo $v ?></option>
+<?php endforeach; endif; ?>
+        				</select>
+        			</td>
+        		</tr>
+                <tr>
+                    <td></td>
+                    <td><i><?php echo self::t('After changing the setting, hit save; the markups will be adjusted automatically. Important: The existing markup will be overwritten! ') ?></i></td>
+                </tr>
+            </tbody>
+            <thead>
+                <tr><th colspan="2" class="l2"><?php echo self::t('Overview page settings')?></th></tr>
+            </thead>
+            <tbody>
+	           	<tr>
+        			<td class="setting_name"><?php echo self::t('Header'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="header" id="header_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo ($settings['header']); ?></textarea>
+        			</td>
+        		</tr>
+        		<tr>
+        			<td class="setting_name"><?php echo self::t('Article loop'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="article_loop" id="article_loop_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo ($settings['article_loop']); ?></textarea>
+        			</td>
+        		</tr>
+        		<tr>
+        			<td class="setting_name"><?php echo self::t('Footer'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="footer" id="footer_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo $settings['footer']; ?></textarea>
+        			</td>
+        		</tr>
+            </tbody>
+            <thead>
+        		<tr><th colspan="2" class="l2"><?php echo self::t('Article settings')?></th></tr>
+            </thead>
+            <tbody>
+        		<tr>
+        			<td class="setting_name"><?php echo self::t('Article header'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="article_header" id="article_header_<?php echo $sectionID ?>" rows="10" cols="100"><?php echo $settings['article_header']; ?></textarea>
+        			</td>
+        		</tr>
+                <tr>
+        			<td class="setting_name"><?php echo self::t('Article content'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="article_content" id="article_content_<?php echo $sectionID ?>" rows="10" cols="100"><?php echo $settings['article_content']; ?></textarea>
+        			</td>
+        		</tr>
+        		<tr>
+        			<td class="setting_name"><?php echo self::t('Article footer'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="article_footer" id="article_footer_<?php echo $sectionID ?>" rows="10" cols="100"><?php echo $settings['article_footer']; ?></textarea>
+        			</td>
+        		</tr>
+                <tr>
+        			<td class="setting_name"><?php echo self::t('Append article title to page title'); ?>:</td>
+        			<td class="setting_value">
+        				<input type="checkbox" name="append_title" id="append_title_<?php echo $sectionID ?>" value="Y"<?php if($settings['append_title']=='Y'): ?> checked="checked"<?php endif; ?> />
+                        <?php echo self::t('Yes') ?> <i>(<?php echo self::t('This will append the article title to the page title') ?>)</i>
+        			</td>
+        		</tr>
+                <tr>
+        			<td class="setting_name"><?php echo self::t('Use second block'); ?>:</td>
+        			<td class="setting_value">
+        				<input type="checkbox" name="use_second_block" id="use_second_block_<?php echo $sectionID ?>" value="Y"<?php if($settings['use_second_block']=='Y'): ?> checked="checked"<?php endif; ?> />
+                        <?php echo self::t('Yes') ?> <i>(<?php echo self::t('Must be supported by the template') ?>)</i>
+        			</td>
+        		</tr>
+        		<tr class="nwi_use_second_block"<?php if($settings['use_second_block']!='Y'): ?> style="display:none"<?php endif; ?>>
+        			<td class="setting_name"><?php echo self::t('Block'); ?> 2:</td>
+        			<td class="setting_value">
+        				<textarea name="block2" id="block2_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 80px;"><?php echo $settings['block2']; ?></textarea>
+        			</td>
+        		</tr>
+            </tbody>
+            <thead>
+                <tr><th colspan="2" class="l2"><?php echo self::t('Tag settings')?></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+        			<td class="setting_name"><?php echo self::t('Tag loop'); ?>:</td>
+        			<td class="setting_value">
+        				<textarea name="tag_loop" id="tag_loop_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['tag_loop']; ?></textarea>
+        			</td>
+        		</tr>
+            </tbody>
+            <thead>
+                <tr><th colspan="2" class="l2"><?php echo self::t('Gallery settings')?></th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="setting_name"><?php echo self::t('Images subdir'); ?>:</td>
+                    <td class="setting_value">
+                        <input type="text" maxlength="255" name="image_subdir" id="image_subdir_<?php echo $sectionID ?>" value="<?php echo $settings['image_subdir'] ?>" />
+                    </td>
+                </tr>
         		<tr>
                     <td></td>
                     <td><i><?php echo self::t('After changing the gallery setting, hit save; the markup for the image loop will be adjusted automatically.') ?></i></td>
@@ -148,13 +213,13 @@
         		<tr>
         			<td class="setting_name"><?php echo self::t('Image loop'); ?>:</td>
         			<td class="setting_value">
-        				<textarea name="image_loop" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['image_loop']; ?></textarea>
+        				<textarea name="image_loop" id="image_loop_<?php echo $sectionID ?>" rows="10" cols="1" style="width: 98%; height: 60px;"><?php echo $settings['image_loop']; ?></textarea>
         			</td>
         		</tr>
                 <tr>
         			<td class="setting_name"><?php echo self::t('Max. image size in kilobytes'); ?>:</td>
         			<td class="setting_value">
-                        <input type="text" name="imgmaxsize" value="<?php echo intval($settings['imgmaxsize'])/1024 ?>" />
+                        <input type="text" name="imgmaxsize" id="imgmaxsize_<?php echo $sectionID ?>" value="<?php echo intval($settings['imgmaxsize'])/1024 ?>" />
         			</td>
         		</tr>
 <?php if(extension_loaded('gd') AND function_exists('imageCreateFromJpeg')): ?>
@@ -162,18 +227,18 @@
         			<td class="setting_name"><?php echo self::t('Resize gallery images to'); ?>:</td>
         			<td class="setting_value">
                         <label for="imgmaxwidth"><?php echo self::t('Width') ?></label>
-                            <input type="text" maxlength="4" name="imgmaxwidth" id="imgmaxwidth" style="width:80px" value="<?php echo $settings['imgmaxwidth'] ?>" /> x
+                            <input type="text" maxlength="4" name="imgmaxwidth" id="imgmaxwidth_<?php echo $sectionID ?>" style="width:80px" value="<?php echo $settings['imgmaxwidth'] ?>" /> x
                         <label for="imgmaxheight"><?php echo self::t('Height') ?></label>
-                            <input type="text" maxlength="4" name="imgmaxheight" id="imgmaxheight" style="width:80px" value="<?php echo $settings['imgmaxheight'] ?>" /> Pixel
+                            <input type="text" maxlength="4" name="imgmaxheight" id="imgmaxheight_<?php echo $sectionID ?>" style="width:80px" value="<?php echo $settings['imgmaxheight'] ?>" /> Pixel
         			</td>
         		</tr>
                 <tr>
         			<td class="setting_name"><?php echo self::t('Thumbnail size'); ?>:</td>
         			<td class="setting_value">
-                        <label for="thumb_width"><?php echo self::t('Width') ?></label>
-                            <input type="text" maxlength="4" name="thumb_width" id="thumb_width" style="width:80px" value="<?php echo $settings['thumbwidth'] ?>" /> x
-                        <label for="thumb_height"><?php echo self::t('Height') ?></label>
-                            <input type="text" maxlength="4" name="thumb_height" id="thumb_height" style="width:80px" value="<?php echo $settings['thumbheight'] ?>" /> Pixel <br />
+                        <label for="thumb_width_<?php echo $sectionID ?>"><?php echo self::t('Width') ?></label>
+                            <input type="text" maxlength="4" name="thumb_width" id="thumb_width_<?php echo $sectionID ?>" style="width:80px" value="<?php echo $settings['thumbwidth'] ?>" /> x
+                        <label for="thumb_height_<?php echo $sectionID ?>"><?php echo self::t('Height') ?></label>
+                            <input type="text" maxlength="4" name="thumb_height" id="thumb_height_<?php echo $sectionID ?>" style="width:80px" value="<?php echo $settings['thumbheight'] ?>" /> Pixel <br />
                             <span title="<?php echo self::t('Click to choose from the defaults'); ?>"><?php echo self::t('Default sizes') ?>:&nbsp;
 <?php
 					foreach($data['sizes'] AS $size => $size_name) {
@@ -187,7 +252,7 @@
                 <tr>
                     <td class="setting_name"><?php echo self::t('Crop'); ?>:</td>
         			<td class="setting_value">
-                        <label for="crop"><input type="checkbox" name="crop" id="crop" value="Y"<?php if($settings['crop']=='Y'): ?> checked="checked"<?php endif; ?> title="<?php echo self::t('If the aspect ratio of the original does not match the specified aspect ratio, the overlap of the longer edge will be cut off.') ?>" /> <?php echo self::t('Crop') ?></label><br />
+                        <label for="crop"><input type="checkbox" name="crop" id="crop_<?php echo $sectionID ?>" value="Y"<?php if($settings['crop']=='Y'): ?> checked="checked"<?php endif; ?> title="<?php echo self::t('If the aspect ratio of the original does not match the specified aspect ratio, the overlap of the longer edge will be cut off.') ?>" /> <?php echo self::t('Crop') ?></label><br />
                         <i><?php echo self::t('If the aspect ratio of the original does not match the specified aspect ratio, the overlap of the longer edge will be cut off.'); ?></i>
                     </td>
                 </tr>
@@ -197,29 +262,8 @@
             <td class="text-danger"><?php echo self::t('IMPORTANT NOTE: The GD library is missing, it will not be possible to resize uploaded images automatically!') ?></td>
         </tr>
 <?php endif; endif; ?>
-            </tbody>
-<?php if($settings['mode']=='advanced'): ?>
-            <thead>
-        		<tr><th colspan="2"><?php echo self::t('Advanced settings')?></th></tr>
-            </thead>
-            <tbody>
-                <tr>
-        			<td class="setting_name"><?php echo self::t('Presentation / View'); ?>:</td>
-        			<td class="setting_value">
-        				<select name="view" style="width: 98%;">
-<?php if(is_array($data['views'])): foreach(array_values($data['views']) as $v): ?>
-                            <option value="<?php echo $v ?>"<?php if($settings['view']==$v): ?> selected="selected"<?php endif; ?>><?php echo $v ?></option>
-<?php endforeach; endif; ?>
-        				</select>
-        			</td>
-        		</tr>
-                <tr>
-                    <td></td>
-                    <td><i><?php echo self::t('After changing the setting, hit save; the markups for post loop and post details view will be adjusted automatically.') ?></i></td>
-                </tr>
-<?php endif; ?>
         		<tr>
-        			<td colspan="3">
+        			<td colspan="3" class="btnline">
         				<input name="save_settings" type="submit" value="<?php echo self::t('Save'); ?>" class="btn btn-primary" />
 <?php if($settings['mode']=='advanced'): ?>
                         <input name="preset_name" type="hidden" value="" />

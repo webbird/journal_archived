@@ -19,15 +19,7 @@ require_once __DIR__.'/inc/class.journal.php';
 
 // WBCE
 if(is_object($wb)) {
-    if(method_exists($database,'get_array')) {
-        $section = $database->get_array(sprintf(
-            'SELECT * FROM `%ssections` WHERE `section_id`= %d',
-            TABLE_PREFIX, intval($section_id)
-        ));
-        $section = $section[0];
-    }
-    \CAT\Addon\journal::initialize($section);
-    echo \CAT\Addon\journal::view($section);
+    echo \CAT\Addon\journal::install();
 } else {
     echo "oh no!";
     exit;

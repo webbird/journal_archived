@@ -1,62 +1,89 @@
-<div class="mod_journal">
-    <h2><?php echo \CAT\Addon\junction::t('Add / modify group') ?></h2>
-    <form name="modify_group" action="<?php echo WB_URL; ?>/modules/journal/save_group.php" method="post" enctype="multipart/form-data">
-    <?php echo \CAT\Addon\junction::admin()->getFTAN(); ?>
+<?php include 'backend_header.phtml'; ?>
+    <h2><?php echo self::t('Add / modify group') ?></h2>
+    <form name="modify_group" action="<?php echo $data['form_edit_url'] ?>" method="post" enctype="multipart/form-data">
+    <?php echo self::admin()->getFTAN(); ?>
     <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
     <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
-    <input type="hidden" name="group_id" value="<?php echo $group_id; ?>" />
-    <table>
-    <tr>
-    	<td style="width:80px"><?php echo \CAT\Addon\junction::t('Title') ?>:</td>
-    	<td colspan="2">
-    		<input type="text" name="title" value="<?php echo (htmlspecialchars($group['title'])); ?>" style="width: 98%;" maxlength="255" />
-    	</td>
-    </tr>
-    <tr>
-    	<td><?php echo \CAT\Addon\junction::t('Active') ?>:</td>
-    	<td colspan="2">
-    		<input type="radio" name="active" id="active_true" value="1" <?php if($group['active'] == 1) { echo ' checked="checked"'; } ?> />
-    		<a href="#" onclick="javascript: document.getElementById('active_true').checked = true;">
-    		<?php echo \CAT\Addon\junction::t('Yes') ?>
-    		</a>
-    		-
-    		<input type="radio" name="active" id="active_false" value="0" <?php if($group['active'] == 0) { echo ' checked="checked"'; } ?> />
-    		<a href="#" onclick="javascript: document.getElementById('active_false').checked = true;">
-    		<?php echo \CAT\Addon\junction::t('No') ?>
-    		</a>
-    	</td>
-    </tr>
+    <input type="hidden" name="group_id" value="<?php echo $data['group_id']; ?>" />
+    <input type="hidden" name="tab" value="g" />
+    <table class="table table-sm">
+        <tr>
+        	<td class="setting_name"><?php echo self::t('Title') ?>:</td>
+        	<td class="setting_value">
+        		<input type="text" name="title" value="<?php echo (htmlspecialchars($data['title'])); ?>" maxlength="255" />
+        	</td>
+        </tr>
+        <tr>
+        	<td class="setting_name"><?php echo self::t('Active') ?>:</td>
+        	<td class="setting_value">
+        		<input type="radio" name="active" id="active_true" value="1" <?php if($data['active'] == 1) { echo ' checked="checked"'; } ?> />
+        		<a href="#" onclick="javascript: document.getElementById('active_true').checked = true;">
+        		<?php echo self::t('Yes') ?>
+        		</a>
+        		-
+        		<input type="radio" name="active" id="active_false" value="0" <?php if($data['active'] == 0) { echo ' checked="checked"'; } ?> />
+        		<a href="#" onclick="javascript: document.getElementById('active_false').checked = true;">
+        		<?php echo self::t('No') ?>
+        		</a>
+        	</td>
+        </tr>
 
-    <tr>
-    	<td><?php echo \CAT\Addon\junction::t('Image'); ?>:</td>
-<?php if(file_exists(WB_PATH.MEDIA_DIRECTORY.'/.journal/image'.$group_id.'.jpg')): ?>
-        <td>
-            <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $group_id ?>', x:1, y:1})">
-                <img class="preview" src="<?php echo WB_URL.MEDIA_DIRECTORY; ?>/.journal/image<?php echo $group_id; ?>.jpg" alt="<?php echo \CAT\Addon\junction::t('Image'); ?>" />
-            </a>
-            <div id="tt<?php echo $group_id ?>" class="xbtooltip">
-                <img src="<?php echo WB_URL.MEDIA_DIRECTORY; ?>/.journal/image<?php echo $group_id; ?>.jpg" />
-            </div>
-    		<input type="checkbox" name="delete_image" id="delete_image" value="true" />
-    		<label for="delete_image"><?php echo \CAT\Addon\junction::t('Delete') ?></label>
-    	</td>
-<?php else: ?>
-    	<td colspan="2">
-    		<input type="file" name="image" />
-    	</td>
+        <tr>
+        	<td class="setting_name"><?php echo self::t('Image'); ?>:</td>
+            <td class="setting_value">
+<?php if(strlen($data['image'])>0): ?>
+                <div class="preview-img-wrapper">
+                    <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $data['group_id'] ?>', x:1, y:1})">
+                        <img class="preview-img" src="<?php echo $data['image'] ?>" alt="<?php echo self::t('Image'); ?>" />
+                    </a>
+                    <div id="tt<?php echo $data['group_id'] ?>" class="xbtooltip">
+                        <img src="<?php echo $data['image'] ?>" />
+                    </div>
+                    <button class="btn btn-danger delete_image" id="delete_image_<?php echo $data['group_id'] ?>" style="margin-left:25px" data-group="<?php echo $data['group_id'] ?>">
+                    <i class="fa fa-fw fa-trash"></i> <?php echo self::t('Delete') ?>
+                    </button>
+                </div>
 <?php endif; ?>
-    </tr>
-    </table><br /><br />
-
-    <table>
-    <tr>
-    	<td>
-    		<input name="save" type="submit" value="<?php echo \CAT\Addon\junction::t('Save') ?>" style="width:100px;margin-top:5px;" />
-    	</td>
-    	<td style="text-align:right">
-    		<input type="button" value="<?php echo \CAT\Addon\junction::t('Cancel') ?>" onclick="javascript: window.location = '<?php echo CMSBRIDGE_ADMIN_URL; ?>/pages/modify.php?page_id=<?php echo $pageID; ?>';" />
-    	</td>
-    </tr>
+        		<input type="file" name="image"<?php if(strlen($data['image'])>0): ?> style="display:none;"<?php endif; ?> />
+        	</td>
+        </tr>
+        <tr>
+        	<td colspan="2">
+        		<input name="save" type="submit" value="<?php echo self::t('Save') ?>" class="btn btn-primary" />
+                <input name="saveandback" type="submit" value="<?php echo self::t('Save and go back') ?>" class="btn btn-primary" />
+        		<input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" class="btn btn-secondary" style="float:right" />
+        	</td>
+        </tr>
     </table>
     </form>
+    <script type="text/javascript">
+    //<![CDATA[
+    (function($) {
+        "use strict";
+        $("button.delete_image").on("click",function(e) {
+            e.preventDefault();
+            if(confirm("<?php echo self::t('Are you sure? The image will be deleted from the disk!') ?>") === true) {
+                $.post(
+                    "<?php echo $data['form_edit_url'] ?>",
+                    {
+                        section_id: <?php echo $sectionID; ?>,
+                        page_id: <?php echo $pageID; ?>,
+                        group_id: <?php echo $data['group_id']; ?>,
+                        delete_image: 1,
+                        tab: "g",
+                        ajax: 1,
+                        save: 1
+                    },
+                    function(data) {
+                        if(data.success == true) {
+                            $("input[name=image]").show();
+                            $("div.preview-img-wrapper").hide();
+                        }
+                    }
+                );
+            }
+        });
+    })(jQuery);
+    //]]>
+    </script>
 </div>

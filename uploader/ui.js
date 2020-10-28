@@ -4,12 +4,16 @@
 //jQuery.noConflict();
 (function($) {
     // Adds an entry to our status area
-    $.fn.ui_add_status = function(message)
+    $.fn.ui_add_status = function(message, color)
     {
       var template = $('#status-template').text();
       template = template.replace('%%message%%', message);
-      $('#status').find('li').fadeOut(); // remov any previous status
+      $('#status').find('li').fadeOut(); // remove any previous status
       $('#status').prepend(template);
+      if (typeof color != 'undefined'){
+        $('#status > li').removeClass('bg-success bg-info bg-warning bg-danger');
+        $('#status > li').addClass('bg-' + color);
+      }
     }
 
     // Creates a new file and add it to our list

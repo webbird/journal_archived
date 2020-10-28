@@ -42,11 +42,11 @@
 
         <table class="table table-sm">
         <tr>
-        	<td align="left">
+        	<td>
         		<input name="save" type="submit" value="<?php echo self::t('Save'); ?>" />
         		<input name="saveandback" type="submit" value="<?php echo self::t('Save and go back'); ?>" />
         	</td>
-        	<td align="right">
+        	<td style="text-align:right">
         		<input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" class="btn btn-secondary" />
         	</td>
         </tr>
@@ -54,8 +54,9 @@
     </form>
 
 <script type="text/javascript">
-    var JOURNAL_UPLOAD_URL = "<?php echo CMSBRIDGE_CMS_URL."/modules/".JOURNAL_MODDIR."/uploader/upload.php?article_id=".$data['article_id']; ?>";
+    var JOURNAL_UPLOAD_URL = "<?php echo CMSBRIDGE_CMS_URL."/modules/".JOURNAL_MODDIR."/uploader/upload.php?section_id=".$sectionID."&article_id=".$data['article_id']; ?>";
     var JOURNAL_COMPLETE_MESSAGE = "<?php echo self::t('Complete'); ?>";
+    var JOURNAL_SIZE_MESSAGE = "<?php echo self::t('The file size exceeds the limit'); ?>";
     var JOURNAL_IMAGE_MAX_SIZE = "<?php echo $settings['imgmaxsize']; ?>";
 
     jQuery.noConflict();
@@ -75,6 +76,7 @@
     <!-- File item template -->
     <script type="text/html" id="files-template">
         <li class="media">
+            <img class="mr-3 mb-2 preview-img" src="<?php echo CMSBRIDGE_CMS_URL."/modules/".JOURNAL_MODDIR."/images/nopic.png" ?>" alt="Generic placeholder image">
             <div class="media-body mb-1">
                 <p class="mb-2">
                     <strong>%%filename%%</strong> - Status: <span class="text-muted">Waiting</span>

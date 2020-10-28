@@ -3,7 +3,7 @@
 $header = ''."\n";
 $article_loop = '<div class="mod_journal_group">
     <div class="mod_journal_teaserpic">
-        <a href="[LINK]">[IMAGE]</a>
+        <a href="[LINK]">[PREVIEW_IMAGE]</a>
     </div>
     <div class="mod_journal_teasertext">
         <a href="[LINK]"><h3>[TITLE]</h3></a>
@@ -24,7 +24,6 @@ $footer = '<table class="mod_journal_table" style="visibility:[DISPLAY_PREVIOUS_
     <td class="mod_journal_table_right">[NEXT_PAGE_LINK]</td>
 </tr>
 </table>';
-$block2 = '';
 $article_header = addslashes('<h2>[TITLE]</h2>');
 $article_content = '<div class="mod_journal_content_short">
   [CONTENT_SHORT]
@@ -34,7 +33,6 @@ $article_content = '<div class="mod_journal_content_short">
 [IMAGES]
 </div>
 ';
-$image_loop = '<img src="[IMAGE]" alt="[DESCRIPTION]" title="[DESCRIPTION]" data-caption="[DESCRIPTION]" />';
 $article_footer = ' <div class="mod_journal_spacer"></div>
 <table class="mod_journal_table" style="visibility: [DISPLAY_PREVIOUS_NEXT_LINKS]">
 <tr>

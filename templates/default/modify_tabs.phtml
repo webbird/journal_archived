@@ -1,22 +1,21 @@
-        <input type="radio" name="tabs" id="maintab1"<?php if($data['curr_tab']=='p'): ?> checked="checked"<?php endif; ?> />
-        <label for="maintab1" class="tab">
-            <i class="fa fa-fw fa-clone"></i> <span><?php echo self::t('Articles') ?></span>
-        </label>
-        <input type="radio" name="tabs" id="maintab2"<?php if($data['curr_tab']=='g'): ?> checked="checked"<?php endif; ?> />
-        <label for="maintab2" class="tab">
-            <i class="fa fa-fw fa-cubes"></i> <span><?php echo self::t('Groups') ?></span>
-        </label>
+<nav>
+        <ul>
+            <li class="licol1<?php if($data['curr_tab']=='p'): ?> active<?php endif; ?>">
+                <a href="<?php echo $data['edit_url']; ?>tab=p"><i class="fa fa-fw fa-clone"></i> <span><?php echo self::t('Articles') ?></span></a>
+            </li>
+            <li class="licol2<?php if($data['curr_tab']=='g'): ?> active<?php endif; ?>">
+                <a href="<?php echo $data['edit_url']; ?>tab=g"><i class="fa fa-fw fa-cubes"></i> <span><?php echo self::t('Groups') ?></span></a>
+            </li>
 <?php if($settings['mode']=='advanced'): ?>
-        <input type="radio" name="tabs" id="maintab3"<?php if($data['curr_tab']=='s'): ?> checked="checked"<?php endif; ?> />
-        <label for="maintab3" class="tab">
-            <i class="fa fa-fw fa-tags"></i> <span><?php echo self::t('Tags') ?></span>
-        </label>
+            <li class="licol3<?php if($data['curr_tab']=='s'): ?> active<?php endif; ?>">
+                <a href="<?php echo $data['edit_url']; ?>tab=s"><i class="fa fa-fw fa-tags"></i> <span><?php echo self::t('Tags') ?></span></a>
+            </li>
 <?php endif; ?>
-        <input type="radio" name="tabs" id="maintab4"<?php if($data['curr_tab']=='o'): ?> checked="checked"<?php endif; ?> />
-        <label for="maintab4" class="tab">
-            <i class="fa fa-fw fa-wrench"></i> <span><?php echo self::t('Options') ?></span>
-        </label>
-        <input type="radio" name="tabs" id="maintab5"<?php if($data['curr_tab']=='r'): ?> checked="checked"<?php endif; ?> />
-        <label for="maintab5" class="tab">
-            <i class="fa fa-fw fa-info-circle"></i> <span><?php echo self::t('Readme') ?></span>
-        </label>
+            <li class="licol4<?php if($data['curr_tab']=='o'): ?> active<?php endif; ?>">
+                <a href="<?php echo $data['edit_url']; ?>tab=o"><i class="fa fa-fw fa-wrench"></i> <span><?php echo self::t('Options') ?></span></a>
+            </li>
+            <li class="red<?php if($data['curr_tab']=='r'): ?> active<?php endif; ?>">
+                <a href="<?php echo $data['edit_url']; ?>tab=r"><i class="fa fa-fw fa-info-circle"></i> <span><?php echo self::t('Readme') ?></span></a>
+            </li>
+        </ul>
+</nav><br style="clear:left" />

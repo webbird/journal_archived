@@ -1,9 +1,19 @@
 /* ===== forms ===== */
-.mod_journal.wbce input[type="submit"],.mod_journal.wbce input[type="button"]{width:150px;padding:5px;margin-top:5px}
-.mod_journal.wbce a.btn{display:inline-block;width:150px;background-color:#ccc;text-align:center;text-decoration:none;}
+.mod_journal.wbce input[type="submit"],.mod_journal.wbce input[type="button"]{min-width:150px;padding:5px;margin-top:5px}
+.mod_journal.wbce a.btn{display:inline-block;min-width:150px;background-color:#ccc;text-align:center;text-decoration:none;}
 .mod_journal.wbce a.btn:hover{color:#c00;}
 
 div.card-content .form-control{display:inline}
 
 .mod_journal.wbce .border-danger{border:1px solid #c00}
 .mod_journal input.border-danger{background-color:#f5cccc;}
+
+.mod_journal input[type="submit"],
+.mod_journal input[type="button"] {
+    background-image: linear-gradient(to bottom, #484e4f, #323637);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.06);
+    padding: 7px;
+    border: 1px solid #777;
+    color: #fff;
+    margin:0;
+}

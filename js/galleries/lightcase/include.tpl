@@ -1,7 +1,5 @@
-<script src="<?php echo WB_URL ?>/modules/journal/js/galleries/lightcase/src/js/lightcase.js"></script>
-<script src="<?php echo WB_URL ?>/modules/journal/js/galleries/lightcase/vendor/jQuery/jquery.events.touch.js"></script>
-
-<link rel="stylesheet" href="<?php echo WB_URL ?>/modules/journal/js/galleries/lightcase/src/css/lightcase.css" />
+<script src="<?php echo CMSBRIDGE_CMS_URL.'/modules/'.JOURNAL_MODDIR.'/js/galleries/' ?>lightcase/src/js/lightcase.js"></script>
+<script src="<?php echo CMSBRIDGE_CMS_URL.'/modules/'.JOURNAL_MODDIR.'/js/galleries/' ?>lightcase/vendor/jQuery/jquery.events.touch.js"></script>
 
 <script type="text/javascript">
 jQuery(document).ready(function($) {

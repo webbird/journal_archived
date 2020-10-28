@@ -35,7 +35,7 @@
                         <tbody>
 <?php foreach($data['articles'] as $article): ?>
                             <tr id="article_id:<?php echo $article['article_id']; ?>">
-                                <td<?php if ($settings['view_order'] == 0): echo ' class="dragdrop_item"'; endif; ?>>&nbsp;</td>
+                                <td<?php if ($settings['view_order'] == 0): echo ' class="dragdrop_item"'; endif; ?>><i class="fa fas fa-fw fa-arrows-alt-v"></i></td>
                                 <td>
                                     <a href="<?php echo $data['edit_url'] ?>article_id=<?php echo $article['article_id']; ?>" title="<?php echo self::t('Modify') ?>">
                                         <span class="fa fa-fw fa-edit"></span>
@@ -47,12 +47,14 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <?php echo $article['group_title'] ?>
+                                    <a href="<?php echo $data['edit_url'] ?>section_id=<?php echo $sectionID; ?>&amp;group_id=<?php echo $article['group_id']; ?>&amp;tab=g" title="<?php echo self::t('Modify') ?>">
+                                        <?php echo $article['group_title'] ?>
+                                    </a>
                                 </td>
                                 <td>
                                     <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url'] ?>article_id=<?php echo $article['article_id']; ?>&amp;active=<?php echo $article['active']!=0 ? '0':'1'; ?>');" title="<?php if ($article['active'] == 1): echo self::t('Deactivate article'); else: echo self::t('Activate article'); endif;?>">
 <?php if ($article['active'] == 1): ?>
-                                    <span class="fa fa-fw fa-eye"></span>
+                                    <span class="fa fa-fw fa-check"></span>
 <?php else: ?>
                                     <span class="fa fa-fw fa-eye-slash"></span>
 <?php endif; ?></a>
@@ -67,7 +69,12 @@
                                     <?php echo $article['publishing_end_date'] ?>
                                 </td>
                                 <td>
-                                    <?php echo $article['icon']; ?>
+<?php if ($article['is_visible'] == true): ?>
+                                    <span class="fa fa-fw fa-calendar-check"></span>
+<?php else: ?>
+                                    <span class="fa fa-fw fa-calendar-times"></span>
+<?php endif; ?></a>
+
                                 </td>
                                 <td>
 <?php if (($article['position'] != 1) && ($settings['view_order'] == 0)): ?>
@@ -92,7 +99,7 @@
                                 </td>
                                 <td>
                                     <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/delete_article.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;article_id=<?php echo $article['article_id']; ?>');" title="<?php echo self::t('Delete') ?>">
-                                        <span class="fa fa-fw fa-close nwi-delete"></span>
+                                        <span class="fa fa-fw fa-trash nwi-delete"></span>
                                     </a>
                                 </td>
                                 <td<?php if ($settings['view_order'] == 0): ?> class="dragdrop_item"<?php endif; ?>>&nbsp;</td>
@@ -104,11 +111,11 @@
                 </div>
 
                 <table class="table table-sm">
-                    <tr style="background-color:transparent">
-                        <td>
+                    <tr>
+                        <td class="btnline">
 <?php echo $add_article_button ?>
                         </td>
-                        <td style="text-align:right">
+                        <td style="text-align:right" class="btnline">
                             <div class="mod_news_article_tools"><?php echo self::t('Action') ?>:
                                 <select name="action">
                                     <option value="" selected="selected"></option>

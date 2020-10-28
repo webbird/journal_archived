@@ -3,5 +3,5 @@
                 <?php echo self::t('Please note').':<br />'.implode("<br />",self::$errors); ?>
             </div>
 <?php endif; if(!empty(self::$info)): ?>
-            <div class="alert alert-info"><?php echo $data['info'] ?></div>
+            <div class="alert alert-info"><?php echo implode("<br />",self::$info); ?></div>
 <?php endif; ?>

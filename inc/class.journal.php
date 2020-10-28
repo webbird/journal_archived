@@ -64,9 +64,16 @@ if(!class_exists('journal',false))
             'text_hover_color' => '#000',
         );
         /**
+         * @var fallback to allowed suffixes
+         **/
+        protected static $allowed_suffixes = array(
+            'jpg','jpeg','gif','bmp','tiff','png'
+        );
+        /**
          * @var settings cache
          **/
         protected static $settings    = null;
+        protected static $settings_db = false;
         /**
          * @var current section
          **/
@@ -75,6 +82,10 @@ if(!class_exists('journal',false))
          * @var current page
          **/
         protected static $pageID      = null;
+        /**
+         * @var current user
+         **/
+        protected static $userID      = null;
         /**
          * @var properties of current page
          **/
@@ -105,8 +116,19 @@ if(!class_exists('journal',false))
             return cmsbridge::getInfo($value);
         }   // end function getInfo()
 
-        public static function initialize(array $section) {
+        /**
+         *
+         *
+         *
+         **/
+        public static function initialize(array $section)
+        {
             cmsbridge::initialize($section);
+
+            self::$sectionID = intval($section['section_id']);
+            self::$pageID    = cmsbridge::pagefor(self::$sectionID);
+            self::$page      = cmsbridge::getPage(self::$pageID);
+
             if(CMSBRIDGE_CMS_BC2) {
                 $lang_path = \CAT\Helper\Directory::sanitizePath(implode('/',array(CAT_ENGINE_PATH,CAT_MODULES_FOLDER,$section['module'],CAT_LANGUAGES_FOLDER)));
                 if (is_dir($lang_path)) {
@@ -117,40 +139,55 @@ if(!class_exists('journal',false))
             }
             if(CMSBRIDGE_CMS_WBCE) {
                 cmsbridge::setLangVar('JOURNAL_LANG');
+                self::$userID = cmsbridge::admin()->getUserID();
             }
-            define('JOURNAL_IMAGE_SUBDIR','journal');
-            define('JOURNAL_DIR'     ,pathinfo(__DIR__,PATHINFO_DIRNAME));
+
             define('JOURNAL_MODDIR'  ,pathinfo(pathinfo(__DIR__,PATHINFO_DIRNAME),PATHINFO_BASENAME));
+            define('JOURNAL_MODURL'  ,CMSBRIDGE_CMS_URL.'/modules/'.JOURNAL_MODDIR);
+
+            self::$tables = array(
+                'settings'      => 'mod_'.JOURNAL_MODDIR.'_settings',
+                'articles'      => 'mod_'.JOURNAL_MODDIR.'_articles',
+                'groups'        => 'mod_'.JOURNAL_MODDIR.'_groups',
+                'images'        => 'mod_'.JOURNAL_MODDIR.'_img',
+                'tags'          => 'mod_'.JOURNAL_MODDIR.'_tags',
+                'articles_img'  => 'mod_'.JOURNAL_MODDIR.'_articles_img',
+                'tags_sections' => 'mod_'.JOURNAL_MODDIR.'_tags_sections',
+                'tags_articles' => 'mod_'.JOURNAL_MODDIR.'_tags_articles',
+            );
+
+            self::getSettings();
+
+            define('JOURNAL_IMAGE_SUBDIR', self::$settings['image_subdir']);
+            define('JOURNAL_DIR'     ,pathinfo(__DIR__,PATHINFO_DIRNAME));
             define('JOURNAL_IMGDIR'  ,CMSBRIDGE_CMS_PATH.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR);
             define('JOURNAL_IMGURL'  ,CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR);
             define('JOURNAL_NOPIC'   ,CMSBRIDGE_CMS_URL."/modules/".JOURNAL_MODDIR."/images/nopic.png");
+            define('JOURNAL_THUMBDIR','thumbs');
 
             define('JOURNAL_TITLE_SPACER', ' # ');
 
-            self::$sectionID = intval($section['section_id']);
-            self::$pageID    = cmsbridge::pagefor(self::$sectionID);
-            self::$page      = cmsbridge::getPage(self::$pageID);
             if(!CMSBRIDGE_CMS_BC2) {
                 self::$page['route'] = self::$page['link'];
             }
-            
+
             self::$tpldata = array(
                 'curr_tab'      => 'p',
                 'edit_url'      => cmsbridge::getRoute('/pages/edit/{id}').(CMSBRIDGE_CMS_BC2 ? '?' : '&amp;'),
                 'form_edit_url' => cmsbridge::getRoute('/pages/edit/{id}'),
             );
-
-            self::$tables = array(
-                'settings' => 'mod_'.JOURNAL_MODDIR.'_settings',
-                'articles' => 'mod_'.JOURNAL_MODDIR.'_articles',
-                'groups'   => 'mod_'.JOURNAL_MODDIR.'_groups',
-                'images'   => 'mod_'.JOURNAL_MODDIR.'_img',
-                'tags'     => 'mod_'.JOURNAL_MODDIR.'_tags',
-                'articles_img'  => 'mod_'.JOURNAL_MODDIR.'_articles_img',
-                'tags_sections' => 'mod_'.JOURNAL_MODDIR.'_tags_sections',
-                'tags_articles' => 'mod_'.JOURNAL_MODDIR.'_tags_articles',
-            );
         }
+
+        /**
+         *
+         * @access public
+         * @return
+         **/
+        public static function install()
+        {
+
+        }   // end function install()
+
 
         /**
          * called by modify.php in BC1 and WBCE and by \CAT\Backend in BC2
@@ -161,48 +198,54 @@ if(!class_exists('journal',false))
          **/
         public static function modify(array $section) : string
         {
-            $info = $error   = null;
-
             // tab to activate
             $curr_tab = 'p';
+            $curr_tpl = 'articles';
             if (isset($_REQUEST['tab']) && in_array($_REQUEST['tab'], array('p','g','s','o','r'))) {
                 $curr_tab = $_REQUEST['tab'];
             }
 
-            // cleanup database (orphaned)
-            try {
-                cmsbridge::db()->query(sprintf(
-                    "DELETE FROM `%s%s` WHERE `section_id`=%d and `title`=''",
-                    cmsbridge::dbprefix(),self::$tables['articles'],self::$sectionID
-                ));
-                cmsbridge::db()->query(sprintf(
-                    "DELETE FROM `%s%s` WHERE `section_id`=%d and `title`=''",
-                    cmsbridge::dbprefix(),self::$tables['groups'],self::$sectionID
-                ));
-            } catch ( \PDOException $e ) {
-            }
+            $data = array(
+                'is_admin'     => false,
+            );
 
             // switch action
             switch($curr_tab) {
+                // ----- group actions -----------------------------------------
                 case 'g':
+                    $curr_tpl = 'groups';
                     if(isset($_REQUEST['add_group']) && !empty($_REQUEST['title'])) {
-                        self::addGroup();
+                        if(!self::addGroup()) {
+                            self::$errors[] = cmsbridge::t('Unable to add the group!');
+                        } else {
+                            self::$info[] = cmsbridge::t('Group successfully added');
+                        }
                     }
                     if(isset($_REQUEST['del_group'])) {
                         if(!self::delGroup()) {
-                            $error = cmsbridge::t('Unable to delete the group!');
+                            self::$errors[] = cmsbridge::t('Unable to delete the group!');
                         } else {
-                            $info = cmsbridge::t('Group successfully deleted');
+                            self::$info[] = cmsbridge::t('Group successfully deleted');
                         }
                     }
                     if(isset($_REQUEST['group_id'])) {
-                        $ret = self::editGroup(intval($_REQUEST['group_id']));
-                        if($ret!="1") {
-                            return $ret;
+                        // just activate/deactivate?
+                        if(isset($_REQUEST['active']) && !isset($_REQUEST['save']) && !isset($_REQUEST['saveandback'])) {
+                            self::activateGroup(intval($_REQUEST['group_id']));
+                        } else {
+                            $return = self::editGroup(intval($_REQUEST['group_id']));
+                            if(!empty($return)) {
+                                return $return;
+                            }
                         }
                     }
+                    $data['groups']       = self::getGroups();
+                    $data['num_groups']   = 0;
+
                     break;
+                // ----- settings (options) ------------------------------------
                 case 'o':
+                    $curr_tpl = 'settings';
                     if(isset($_REQUEST['mode']) && in_array($_REQUEST['mode'],array('default','advanced'))) {
                         cmsbridge::db()->query(sprintf(
                             'UPDATE `%s%s` SET `mode`="%s"',
@@ -214,37 +257,42 @@ if(!class_exists('journal',false))
                         self::saveSettings();
                     }
                     break;
+                // ----- posts (articles) - default view -----------------------
                 case 'p':
                     if(isset($_REQUEST['mod_journal_add_article'])) {
                         return self::addArticle();
                     }
                     if(isset($_REQUEST['article_id'])) {
-                        $ret = self::editArticle(intval($_REQUEST['article_id']));
-                        if($ret!="1") {
-                            return $ret;
+                        // just activate/deactivate?
+                        if(isset($_REQUEST['active']) && !isset($_REQUEST['save'])) {
+                            self::activateArticle(intval($_REQUEST['article_id']));
+                        } else {
+                            return self::editArticle(intval($_REQUEST['article_id']));
                         }
                     }
+                    $data['articles'] = self::getArticles(true, '');;
+                    $data['num_articles'] = count($data['articles']);
+
                     break;
+                // ----- tags ("Stichworte") -----------------------------------
                 case 's':
+                    $curr_tpl = 'tags';
                     if(isset($_REQUEST['new_tag'])) {
                         self::addTag();
                     }
                     if(isset($_REQUEST['tag_id']) && !isset($_REQUEST['cancel'])) {
                         return self::editTag();
                     }
+                    $data['tags'] = self::getTags(self::$sectionID);
+                    break;
+                case 'r':
+                    $curr_tpl = 'readme';
                     break;
             }
 
-            $articles = self::getArticles(true, '');
-            $groups   = self::getGroups();
-            $article_data = array(
+            $data = array_merge($data, array(
                 'curr_tab'     => $curr_tab,
-                'is_admin'     => false,
-                'articles'     => $articles,
-                'num_articles' => count($articles),
-                'groups'       => $groups,
-                'num_groups'   => 0,
-                'tags'         => self::getTags(self::$sectionID),
+                'curr_tpl'     => $curr_tpl,
                 'lang_map'     => array(
                     0 => cmsbridge::t('Custom'),
                     1 => cmsbridge::t('Publishing start date').', '.cmsbridge::t('descending'),
@@ -255,12 +303,10 @@ if(!class_exists('journal',false))
                 'sizes'        => self::getSizePresets(),
                 'views'        => self::getViews(),
                 'FTAN'         => cmsbridge::getFTAN(),
-                'info'         => $info,
-                'error'        => $error,
                 // WBCE only --->
                 'importable_sections' => 0,
                 // <---
-            );
+            ));
 
             if(CMSBRIDGE_CMS_WBCE) {
                 global $admin;
@@ -273,7 +319,7 @@ if(!class_exists('journal',false))
 
             return self::printPage(
                 __DIR__.'/../templates/default/modify.phtml',
-                $article_data
+                $data
             );
         }
 
@@ -297,12 +343,16 @@ if(!class_exists('journal',false))
                     return;
                 }
             }
+            if(CMSBRIDGE_CMS_WBCE && defined('ARTICLE_ID')) {
+                echo self::readArticle(ARTICLE_ID);
+                return;
+            }
 
             // list
             $articles = self::getArticles(false, self::getQueryExtra(), true);
             echo self::renderList($articles);
         }   // end function view()
-        
+
         /**
          *
          * @access public
@@ -312,6 +362,192 @@ if(!class_exists('journal',false))
         {
             return cmsbridge::admin();
         }   // end function admin()
+
+        /**
+         * get article details
+         * public as needed by upload.php
+         *
+         * @access public
+         * @param  int    $articleID
+         * @return array
+         **/
+        public static function getArticle(int $articleID) : array
+        {
+            list($order_by,$direction) = self::getOrder(self::$sectionID);
+            $prev_dir = ($direction=='DESC'?'ASC':'DESC');
+            $sql = sprintf(
+                "SELECT `t1`.*, " .
+                "  (SELECT `link` FROM `%s%s` AS `t2` WHERE `t2`.`$order_by` > `t1`.`$order_by` AND `section_id`=%d AND `active`=1 ORDER BY `$order_by` $prev_dir LIMIT 1 ) as `prev_link`, ".
+                "  (SELECT `link` FROM `%s%s` AS `t3` WHERE `t3`.`$order_by` < `t1`.`$order_by` AND `section_id`=%d AND `active`=1 ORDER BY `$order_by` $direction LIMIT 1 ) as `next_link` " .
+                "FROM `%s%s` AS `t1` " .
+                "WHERE `article_id`=%d",
+                cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID,
+                cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID,
+                cmsbridge::dbprefix(), self::$tables['articles'], $articleID
+            );
+            $stmt = cmsbridge::db()->query($sql);
+            if(!empty($stmt)) {
+                $article = $stmt->fetch();
+                // get users
+                $users = self::getUsers();
+                // add "unknown" user
+                $users[0] = array(
+                    'username' => 'unknown',
+                    'display_name' => 'unknown',
+                    'email' => ''
+                );
+                return self::processArticle($article, $users);
+            }
+            return array();
+        }   // end function getArticle()
+
+        /**
+         *
+         * @access public
+         * @return
+         **/
+        public static function handleUpload(int $ID, ?string $for='article')
+        {
+            $key      = 'file';
+            $settings = self::getSettings();
+
+            switch($for) {
+                case 'article':
+                    $data     = self::getArticle($ID);
+                    $dir      = CMSBRIDGE_MEDIA_FULLDIR.'/'.$settings['image_subdir'].'/'.$ID;
+                    break;
+                case 'group':
+                    $data     = self::getGroup($ID);
+                    $dir      = CMSBRIDGE_MEDIA_FULLDIR.'/'.$settings['image_subdir'];
+                    $key      = 'image';
+                    break;
+            }
+
+
+            if(!is_dir($dir)) {
+                @make_dir($dir,0770);
+            }
+            if($for=='article' && !is_dir($dir.'/'.JOURNAL_THUMBDIR)) {
+                @make_dir($dir.'/'.JOURNAL_THUMBDIR,0770);
+            }
+
+            if(isset($_FILES[$key]) && is_array($_FILES[$key])) {
+                $picture = $_FILES[$key];
+                if(empty($settings['imgmaxsize'])) {
+                    $settings['imgmaxsize'] = ini_get('post_max_size');
+                }
+                if (isset($picture['name']) && $picture['name'] && (strlen($picture['name']) > 3))
+                {
+                    // check allowed file size
+                    if(empty($picture['size']) || $picture['size'] > $settings['imgmaxsize']) {
+                        $errors[] = self::t('The file size exceeds the limit.')
+                                  . ' ' . self::t('Allowed') . ': '. self::humanize($settings['imgmaxsize'])
+                                  . ( !empty($picture['size'])
+                                      ? '; ' . self::t('Actual')  . ': '. self::humanize($picture['size'])
+                                      : ''
+                                    );
+                    }
+                    $ext = pathinfo($picture['name'],PATHINFO_EXTENSION);
+                    // validate name
+                    if(CMSBRIDGE_CMS_BC2) {
+                        $name    = \CAT\Helper\Directory::sanitizeFilename($picture['name']);
+                        $allowed = \CAT\Helper\Media::getAllowedFileSuffixes('image/*');
+                        $name .= '.'.$ext;
+                    }
+                    if(CMSBRIDGE_CMS_WBCE) {
+                        $name    = media_filename($picture['name']);
+                        $allowed = self::$allowed_suffixes; // fallback
+                    }
+                    // check allowed types
+                    if(!in_array($ext,$allowed)) {
+                        $errors[] = self::t('Invalid type.')
+                                  . ' ' . self::t('Allowed') . ': '. implode(', ',$allowed)
+                                  . '; ' . self::t('Actual')  . ': '. $ext;
+                    }
+
+                    switch($for) {
+                        case 'article':
+                            // find free name
+                            $filename = self::findFreeFilename($dir, $name);
+                            // check max filename length
+                            if(strlen($filename) > 256) {
+                                $errors[] = self::t('Name too long.')
+                                          . ' ' . self::t('Allowed') . ': 256'
+                                          . '; ' . self::t('Actual')  . ': '. strlen($filename);
+                            }
+                            break;
+                        case 'group':
+                            $filename = 'group'.$ID.'.'.$ext;
+                            break;
+                    }
+
+                    // any errors so far?
+                    if(count(self::$errors)>0) {
+                        return array(
+                            'status'  => 'error',
+                            'message' => implode("\n",$errors),
+                        );
+                    }
+
+                    // move to media folder
+                    $src = $dir.'/'.$filename;
+                    if (true===move_uploaded_file($picture['tmp_name'], $src)) {
+                        // can we resize the image and create a thumbnail?
+                        if(extension_loaded('gd') && function_exists('getimagesize')) {
+                            $crop = ($settings['crop']=='Y');
+                            // resize image if necessary
+                            list($w, $h) = getimagesize($src);
+                            if($w > $settings['imgmaxwidth'] || $h > $settings['imgmaxheight']) {
+                                self::resize($src, $src, $settings['imgmaxwidth'], $settings['imgmaxheight'], $crop);
+                            }
+                            if($for=='article') {
+                                // create thumbnail
+                                list($w, $h) = explode('x', $settings['imgthumbsize']);
+                                if(!empty($w) && !empty($h)) {
+                                    self::resize($src,$dir.'/'.JOURNAL_THUMBDIR.'/'.$filename, $w, $h, $crop);
+                                }
+                            }
+                        }
+
+                        switch($for) {
+                            case 'article':
+                                self::saveArticleImage($filename, $ID);
+                                break;
+                            case 'group':
+                                self::saveGroupImage($filename, $ID);
+                                break;
+                        }
+
+                        return array(
+                            'status' => 'ok',
+                            'message' => 'jo',
+                        );
+                    }
+                }
+            }
+
+
+        }   // end function handleUpload()
+
+        /**
+         * convert bytes to human readable string
+         *
+         * @access public
+         * @param  string $bytes
+         * @return string
+         **/
+        public static function humanize(string $bytes) : string
+        {
+            $symbol          = array(' bytes', ' KB', ' MB', ' GB', ' TB');
+            $exp             = 0;
+            $converted_value = 0;
+            $bytes           = (int)$bytes;
+            if ($bytes > 0) {
+                $exp = floor(log($bytes) / log(1024));
+                $converted_value = ($bytes / pow(1024, floor($exp)));
+            }
+            return sprintf('%.2f '.$symbol[$exp], $converted_value);
+        }   // end function humanize()
 
         /**
          *
@@ -345,8 +581,8 @@ if(!class_exists('journal',false))
             }
             return $content;
         }   // end function printHeaders()
-        
-        
+
+
         /**
          *
          * @access public
@@ -372,20 +608,68 @@ if(!class_exists('journal',false))
          * @access protected
          * @return
          **/
+        protected static function activateArticle(int $articleID) : bool
+        {
+            $newval = (intval($_REQUEST['active'])==1) ? 1 : 0;
+            cmsbridge::db()->query(sprintf(
+                'UPDATE `%s%s` SET `active`=%d WHERE `article_id`=%d',
+                cmsbridge::dbprefix(), self::$tables['articles'], $newval, $articleID
+            ));
+            if(cmsbridge::conn()->errorCode() != '00000') {
+                self::$errors[] = cmsbridge::conn()->errorInfo();
+                return false;
+            }
+            return true;
+        }   // end function activateArticle()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function activateGroup(int $groupID) : bool
+        {
+            $newval = (intval($_REQUEST['active'])==1) ? 1 : 0;
+            cmsbridge::db()->query(sprintf(
+                'UPDATE `%s%s` SET `active`=%d WHERE `group_id`=%d',
+                cmsbridge::dbprefix(), self::$tables['groups'], $newval, $groupID
+            ));
+            if(cmsbridge::conn()->errorCode() != '00000') {
+                self::$errors[] = cmsbridge::conn()->errorInfo();
+                return false;
+            }
+            return true;
+        }   // end function activateGroup()
+        /**
+         *
+         * @access protected
+         * @return
+         **/
         protected static function addGroup()
         {
-            $title  = cmsbridge::escapeString(strip_tags($_REQUEST['title']));
+            // check mandatory
+            if(empty($_REQUEST['title'])) {
+                self::$errors[] = self::t('Title is mandatory!');
+                self::$highlighted['title'] = 1;
+                return false;
+            } else {
+                $title = cmsbridge::escapeString(strip_tags($_REQUEST['title']));
+            }
+
         	$active = ( isset($_REQUEST['active']) && $_REQUEST['active']=='1' )
                     ? 1 : 0;
+
+            $pos = self::getPosition('groups', 'section_id', self::$sectionID);
+
             cmsbridge::db()->query(sprintf(
                 "INSERT INTO `%s%s` (`section_id`,`active`,`position`,`title`) " .
-                "VALUES (%d,%d,0,'%s')",
+                "VALUES (%d,%d,%d,'%s')",
                 cmsbridge::dbprefix(), self::$tables['groups'],
-                self::$sectionID, $active, $title
+                self::$sectionID, $active, $pos, $title
             ));
-            return !(cmsbridge::db()->errorCode()==0);
+            return !(empty(cmsbridge::conn()->errorCode()));
         }   // end function addGroup()
-        
+
         /**
          *
          * @access protected
@@ -396,15 +680,15 @@ if(!class_exists('journal',false))
             $id  = null;
             // Insert new row into database
             $sql = "INSERT INTO `%s%s` " .
-                   "(`section_id`,`position`,`link`,`content_short`,`content_long`,`content_block2`,`active`) ".
-                   "VALUES ('%s','0','','','','','1')";
-            cmsbridge::db()->query(sprintf($sql, cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID));
-            if(cmsbridge::db()->errorCode()==0) {
+                   "(`section_id`,`position`,`link`,`content_short`,`content_long`,`content_block2`,`active`,`posted_when`,`posted_by`) ".
+                   "VALUES ('%s','0','','','','','1','%s',%d)";
+            cmsbridge::db()->query(sprintf($sql, cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID, time(), self::$userID));
+            if(cmsbridge::dbsuccess()) {
                 $stmt = cmsbridge::db()->query('SELECT LAST_INSERT_ID() AS `id`');
                 $res  = $stmt->fetch();
                 $id   = $res['id'];
             }
-            return self::editArticle(self::$sectionID, intval($id));
+            return self::editArticle(intval($id));
         }   // end function addArticle()
 
         /**
@@ -430,7 +714,7 @@ if(!class_exists('journal',false))
                 $title, $d['tag_color'], $d['text_color'], $d['hover_color'], $d['text_hover_color']
             ));
 
-            if(cmsbridge::db()->errorCode()==0) {
+            if(cmsbridge::conn()->errorCode() == '00000') {
                 $stmt   = cmsbridge::db()->query('SELECT LAST_INSERT_ID() AS `id`');
                 $res    = $stmt->fetch();
                 $tag_id = $res['id'];
@@ -441,12 +725,49 @@ if(!class_exists('journal',false))
                 cmsbridge::db()->query(sprintf(
                     "INSERT INTO `%s%s` (`section_id`,`tag_id`) VALUES (%d, %d);",
                     cmsbridge::dbprefix(), self::$tables['tags_sections'],
-                    $tag_section_id, $tag_id
+                    intval($tag_section_id), intval($tag_id)
                 ));
             }
 
-            return !(cmsbridge::db()->errorCode()==0);
+            return !(empty(cmsbridge::conn()->errorCode()));
         }   // end function addTag()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function createAccessFile(int $articleID, string $file, string $time)
+        {
+            if(CMSBRIDGE_CMS_WBCE) {
+                // The depth of the page directory in the directory hierarchy
+                // '/pages' is at depth 1
+                $pages_dir_depth = count(explode('/', PAGES_DIRECTORY))-1;
+                // Work-out how many ../'s we need to get to the index page
+                $index_location = '../';
+                for ($i = 0; $i < $pages_dir_depth; $i++) {
+                    $index_location .= '../';
+                }
+
+                // Write to the filename
+                $content = ''.
+'<?php
+$page_id = '.self::$pageID.';
+$section_id = '.self::$sectionID.';
+$article_id = '.$articleID.';
+define("ARTICLE_SECTION", $section_id);
+define("ARTICLE_ID", $article_id);
+require("'.$index_location.'config.php");
+require(WB_PATH."/index.php");
+?>';
+                if ($handle = fopen($file, 'w+')) {
+                    fwrite($handle, $content);
+                    fclose($handle);
+                    touch($file, $time);
+                    change_mode($file);
+                }
+            }
+        }   // end function createAccessFile()
 
         /**
          *
@@ -467,7 +788,7 @@ if(!class_exists('journal',false))
                     "DELETE FROM `%s%s` WHERE `group_id`=%d",
                     cmsbridge::dbprefix(), self::$tables['groups'], $gid
                 ));
-                return !(cmsbridge::db()->errorCode()==0);
+                return !(empty(cmsbridge::conn()->errorCode()));
             }
             return false;
         }   // end function delGroup()
@@ -479,25 +800,17 @@ if(!class_exists('journal',false))
          **/
         protected static function editArticle(int $articleID) : string
         {
-            // just activate/deactivate?
-            if(isset($_REQUEST['active']) && !isset($_REQUEST['save'])) {
-                $newval = (intval($_REQUEST['active'])==1) ? 1 : 0;
-                cmsbridge::db()->query(sprintf(
-                    'UPDATE `%s%s` SET `active`=%d WHERE `article_id`=%d',
-                    cmsbridge::dbprefix(), self::$tables['articles'], $newval, $articleID
-                ));
-                return "1";
-            }
-
             // move up / down?
             if(isset($_REQUEST['move']) && in_array($_REQUEST['move'],array('up','down'))) {
-                $result = self::moveUpDown($articleID, $_REQUEST['move']);
-                return "1";
+                return self::moveUpDown($articleID, $_REQUEST['move']);
             }
 
             // save?
-            if(isset($_REQUEST['save'])) {
+            if(isset($_REQUEST['save']) || isset($_REQUEST['saveandback'])) {
                 self::saveArticle();
+                if(isset($_REQUEST['saveandback'])) {
+                    return '';
+                }
             }
 
             $article_data = self::getArticle($articleID);
@@ -545,6 +858,10 @@ if(!class_exists('journal',false))
             $article_data['images']   = self::getImages($articleID,false);
             $article_data['tags']     = self::getTags(self::$sectionID,true);
             $article_data['assigned'] = self::getAssignedTags($articleID);
+            list(
+                $article_data['groups'],
+                $article_data['pages']
+            ) = self::getAllGroups();
 
             return self::printPage(
                 __DIR__.'/../templates/default/modify_article.phtml',
@@ -557,20 +874,26 @@ if(!class_exists('journal',false))
          * @access protected
          * @return
          **/
-        protected static function editGroup()
+        protected static function editGroup(int $groupID) : string
         {
-            $gid = intval($_REQUEST['group_id']);
-            if(self::groupExists($gid)) {
-                // just activate/deactivate?
-                if(isset($_REQUEST['active']) && !isset($_REQUEST['save'])) {
-                    $newval = (intval($_REQUEST['active'])==1) ? 1 : 0;
-                    cmsbridge::db()->query(sprintf(
-                        'UPDATE `%s%s` SET `active`=%d WHERE `group_id`=%d',
-                        cmsbridge::dbprefix(), self::$tables['groups'], $newval, $gid
-                    ));
-                    return "1";
+            // save?
+            if(isset($_REQUEST['save']) || isset($_REQUEST['saveandback'])) {
+                self::saveGroup();
+                if(isset($_REQUEST['saveandback'])) {
+                    return '';
                 }
             }
+
+            $data = self::getGroup($groupID);
+            if(empty($data)) {
+                self::$errors[] = self::t('invalid data');
+                return '';
+            }
+
+            return self::printPage(
+                __DIR__.'/../templates/default/modify_group.phtml',
+                $data
+            );
         }   // end function editGroup()
 
         /**
@@ -583,21 +906,18 @@ if(!class_exists('journal',false))
             $tagID = intval($_REQUEST['tag_id']);
             $tag   = self::getTag($tagID);
 
-            if(!is_array($tag) || !isset($tag['tag_id']) || empty($tag['tag_id'])) {
+            if(!is_array($tag) || empty($tagID)) {
                 self::$errors[] = self::t('No such tag');
                 return false;
             }
 
-            if(isset($_REQUEST['save_tag'])) {
+            if(isset($_REQUEST['save_tag']) || isset($_REQUEST['saveandback'])) {
                 // tag name is mandatory
                 $title = cmsbridge::escapeString($_REQUEST['tag']);
                 if(empty($title)) {
                     self::$errors[] = self::t('Title is mandatory!');
                     return false;
                 }
-
-                $tag_color = cmsbridge::escapeString($_REQUEST['tag_color']);
-                $hover_color = cmsbridge::escapeString($_REQUEST['hover_color']);
 
                 foreach(array('tag_color','text_color','hover_color','text_hover_color') as $key) {
                     $d[$key] = (isset($_REQUEST[$key]) ? cmsbridge::escapeString(strip_tags($_REQUEST[$key])) : '');
@@ -607,10 +927,21 @@ if(!class_exists('journal',false))
                     '`tag_color`="%s", `hover_color`="%s", '.
                     '`text_color`="%s", `text_hover_color`="%s" '.
                     'WHERE `tag_id`=%d',
-                    cmsbridge::dbprefix(), self::$tables['tags'].
+                    cmsbridge::dbprefix(), self::$tables['tags'],
                     $title, $d['tag_color'], $d['hover_color'],
                     $d['text_color'], $d['text_hover_color'], $tagID
                 ));
+                if(cmsbridge::conn()->errorCode() != '00000') {
+                    self::$errors[] = cmsbridge::conn()->errorInfo();
+                } else {
+                    self::$info[] = cmsbridge::t('Tag saved');
+                }
+
+                if(isset($_REQUEST['saveandback'])) {
+                    #unset($_REQUEST['tag_id']);
+                    return '';
+                }
+
                 $tag   = self::getTag($tagID);
             }
 
@@ -619,7 +950,7 @@ if(!class_exists('journal',false))
                 array('tag'=>$tag)
             );
         }   // end function editTag()
-        
+
         /**
          *
          * @access protected
@@ -636,7 +967,74 @@ if(!class_exists('journal',false))
             }
             return $tags;
         }   // end function escapeTags()
-        
+
+        /**
+         * if file exists, find new name by adding a number
+         *
+         * @access protected
+         * @param  string    $dir
+         * @param  string    $filename
+         * @return string
+         **/
+        protected static function findFreeFilename(string $dir, string $filename) : string
+        {
+            $num = 1;
+            while(file_exists($dir.'/'.$filename)) {
+                $f_name = pathinfo($dir.'/'.$filename, PATHINFO_FILENAME);
+                $suffix = pathinfo($dir.'/'.$filename, PATHINFO_EXTENSION);
+                $filename = $f_name.'_'.$num.'.'.$suffix;
+                $num++;
+            }
+            return $filename;
+        }   // end function findFreeFilename()
+
+        /**
+         * get groups for all NWI sections on all pages
+         *
+         * result array:
+         * page_id => array of groups
+         *
+         * @param   int   $section_id
+         * @param   int   $page_id
+         * @return  array
+         **/
+        protected static function getAllGroups()
+        {
+            $groups = array();
+            $pages = array();
+
+            // get groups for this section
+            $groups[self::$pageID] = array();
+            $groups[self::$pageID][self::$sectionID] = self::getGroups();
+
+            // get all other NWI sections
+/*
+            $sections = mod_nwi_sections();
+            foreach($sections as $sect) {
+                if($sect['section_id'] != $section_id) { // skip current
+                    $groups[$sect['page_id']] = array();
+                    // groups
+                    $groups[$sect['page_id']][$sect['section_id']] = mod_nwi_get_groups(intval($sect['section_id']));
+                    // get page details for the dropdown
+                    $pid = intval($sect['page_id']);
+                    $page_title = "";
+                    $page_details = "";
+                    if ($pid != 0) { // find out the page title and print separator line
+                        $page_details = $admin->get_page_details($pid);
+                        if (!empty($page_details)) {
+                            $page_title = isset($page_details['page_title'])
+                                        ? $page_details['page_title']
+                                        : ( isset($page_details['menu_title'])
+                                            ? $page_details['menu_title']
+                                            : "" );
+                        }
+                        $pages[$pid] = $page_title;
+                    }
+                }
+            }
+*/
+            return array($groups,$pages);
+        }   // end function mod_nwi_get_all_groups()
 
         /**
          *
@@ -645,281 +1043,16 @@ if(!class_exists('journal',false))
          **/
         protected static function getAllowedSuffixes()
         {
-// !!!!! TODO: aus den CMS-Einstellungen auslesen !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            return array('jpg','jpeg','gif','png');
+            $allowed = array();
+            if(CMSBRIDGE_CMS_BC2) {
+                $allowed = \CAT\Helper\Media::getAllowedFileSuffixes('image/*');
+            }
+            if(CMSBRIDGE_CMS_WBCE) {
+                $allowed = self::$allowed_suffixes; // fallback
+            }
+            return $allowed;
         }   // end function getAllowedSuffixes()
 
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getAssignedTags(int $articleID)
-        {
-            $tags = array();
-
-            $query_tags = cmsbridge::db()->query(sprintf(
-                "SELECT  t1.* " .
-                "FROM `%s%s` AS t1 " .
-                "JOIN `%s%s` AS t2 " .
-                "ON t1.`tag_id`=t2.`tag_id` ".
-                "JOIN `%s%s` AS t3 ".
-                "ON t2.`article_id`=t3.`article_id` ".
-                "WHERE t2.`article_id`=%d",
-                cmsbridge::dbprefix(), self::$tables['tags'],
-                cmsbridge::dbprefix(), self::$tables['tags_articles'],
-                cmsbridge::dbprefix(), self::$tables['articles'], $articleID
-            ));
-
-            if (!empty($query_tags) && $query_tags->rowCount() > 0) {
-                while($t = $query_tags->fetch()) {
-                    $tags[$t['tag_id']] = $t;
-                }
-            }
-
-            return $tags;
-        }   // end function getAssignedTags()
-        
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getBytes(string $val) : int
-        {
-            $val  = trim($val);
-            $last = strtolower($val[strlen($val)-1]);
-            $val  = intval($val);
-            switch ($last) {
-                case 'g':
-                    $val *= 1024;
-                    // no break
-                case 'm':
-                    $val *= 1024;
-                    // no break
-                case 'k':
-                    $val *= 1024;
-            }
-
-            return $val;
-        }   // end function getBytes()
-        
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getGroup(int $groupID)
-        {
-            $query  = cmsbridge::db()->query(sprintf(
-                "SELECT * FROM `%s%s` " .
-                "WHERE `group_id`=%d",
-                cmsbridge::dbprefix(), self::$tables['groups'], $groupID
-            ));
-            if ($query->rowCount() > 0) {
-                return $query->fetch();
-            }
-        }   // end function getGroup()
-        
-        /**
-         * get groups for section with ID $section_id
-         *
-         * @param   int   $section_id
-         * @return
-         **/
-        protected static function getGroups() : array
-        {
-            $groups = array();
-            $query  = cmsbridge::db()->query(sprintf(
-                "SELECT * FROM `%s%s` " .
-                "WHERE `section_id`=%d ORDER BY `position` ASC",
-                cmsbridge::dbprefix(), self::$tables['groups'], self::$sectionID
-            ));
-            if ($query->rowCount() > 0) {
-                $allowed_suffixes = self::getAllowedSuffixes();
-                // Loop through groups
-                while ($group = $query->fetch()) {
-                    $group['id_key'] = cmsbridge::admin()->getIDKEY($group['group_id']);
-                    $group['image']  = '';
-                    foreach($allowed_suffixes as $suffix) {
-                        if (file_exists(JOURNAL_IMGDIR.'/image'.$group['group_id'].'.'.$suffix)) {
-                            $group['image'] = JOURNAL_IMGURL.'/image'.$group['group_id'].'.'.$suffix;
-                            break;
-                        }
-                    }
-                    $groups[] = $group;
-                }
-            }
-            return $groups;
-        }   // end function getGroups()
-
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getImages(int $articleID)
-        {
-            $settings = self::getSettings();
-            $stmt = cmsbridge::db()->query(sprintf(
-                "SELECT * FROM `%s%s` t1 " .
-                "JOIN `%s%s` t2 ".
-                "ON t1.`id`=t2.`pic_id` ".
-                "WHERE `t2`.`article_id`=%d " .
-                "ORDER BY `position`,`id` ASC",
-                cmsbridge::dbprefix(), self::$tables['images'],
-                cmsbridge::dbprefix(), self::$tables['articles_img'],
-                intval($articleID)
-            ));
-            return $stmt->fetchAll();
-        }   // end function getImages()
-
-        /**
-         *
-         * @access
-         * @return
-         **/
-        protected static function getOrder()
-        {
-            $settings  = self::getSettings(self::$sectionID);
-            $order_by  = 'position'; // default
-            $direction = 'ASC';
-            if($settings['view_order']!=0) {
-            switch($settings['view_order']) {
-                case 1:
-                    $order_by = "published_when";
-                    $direction = 'DESC';
-                    break;
-                case 2:
-                    $order_by = "published_until";
-                    $direction = 'DESC';
-                    break;
-                case 3:
-                    $order_by = "posted_when";
-                    $direction = 'DESC';
-                    break;
-                case 4:
-                    $order_by = "article_id";
-                    $direction = 'DESC';
-                    break;
-            }
-            }
-            return array($order_by,$direction);
-        }   // end function getOrder()
-
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getPlaceholders()
-        {
-            // all known placeholders
-            $vars = array(
-                'BACK',                         // back to list link
-                'CONTENT',                      // content_short + content_long
-                'CONTENT_BLOCK2',               // optional block 2
-                'CONTENT_LONG',                 // long content
-                'CONTENT_SHORT',                // short content (teaser)
-                'CREATED_DATE',                 // article added
-                'CREATED_TIME',                 // article added time
-                'DISPLAY_GROUP',                // wether to show the group name
-                'DISPLAY_IMAGE',                // wether to show the preview image
-                'DISPLAY_NAME',                 // user's (who posted) display name
-                'DISPLAY_PREVIOUS_NEXT_LINKS',  // wether to show prev/next
-                'EMAIL',                        // user's (who posted) email address
-                'GROUP_ID',                     // ID of the group the article is linked to
-                'GROUP_IMAGE',                  // image of the group
-                'GROUP_IMAGE_URL',              // image url
-                'GROUP_TITLE',                  // group title
-                'IMAGE',                        // preview image
-        		'IMAGE_URL',					// URL of preview image without <img src>
-                'IMAGES',                       // gallery images
-                'LINK',                         // "read more" link
-                'MODI_DATE',                    // article modification date
-                'MODI_TIME',                    // article modification time
-                'NEXT_LINK',                    // next link
-                'NEXT_PAGE_LINK',               // next page link
-                'OF',                           // text "of" ("von")
-                'OUT_OF',                       // text "out of" ("von")
-                'PAGE_TITLE',                   // page title
-                'POST_ID',                      // ID of the article
-                'POST_OR_GROUP_IMAGE',          // use group image if there's no preview image
-                'POST_TAGS',
-                'PREVIOUS_LINK',                // prev link
-                'PREVIOUS_PAGE_LINK',           // prev page link
-                'PUBLISHED_DATE',               // published date
-                'PUBLISHED_TIME',               // published time
-                'SHORT',                        // alias for CONTENT_SHORT
-                'SHOW_READ_MORE',               // wether to show "read more" link
-                'TAGS',                         // tags
-                'TAG_LINK',
-                'TAG',
-                'TAGCOLOR',                     // background color for tag
-                'TAGHOVERCOLOR',                // mouseover background color for tag
-                'TEXTCOLOR',
-                'TEXTHOVERCOLOR',
-                'TEXT_AT',                      // text for "at" ("um")
-                'TEXT_BACK',                    // text for "back" ("zurueck")
-                'TEXT_LAST_CHANGED',            // text for "last changed" ("zuletzt geaendert")
-                'TEXT_NEXT_POST',               // text for "next article" ("naechster Beitrag")
-                'TEXT_O_CLOCK',                 // text for "o'clock" ("Uhr")
-                'TEXT_ON',                      // text for "on" ("am")
-                'TEXT_POSTED_BY',               // text for "posted by" ("verfasst von")
-                'TEXT_PREV_POST',               // text for "previous article" ("voriger Beitrag")
-                'TEXT_READ_MORE',               // text for "read more" ("Weiterlesen")
-                'TITLE',                        // article title (heading)
-                'USER_ID',                      // user's (who posted) ID
-                'USERNAME',                     // user's (who posted) username
-            );
-            $default_replacements = array(
-                'TEXT_AT'           => self::t('at'),
-                'TEXT_BACK'         => self::t('Back'),
-                'TEXT_LAST_CHANGED' => self::t('Last modified'),
-                'TEXT_NEXT_POST'    => self::t('Next article'),
-                'TEXT_O_CLOCK'      => self::t("o'clock"),
-                'TEXT_ON'           => self::t('on'),
-                'TEXT_POSTED_BY'    => self::t('Posted by'),
-                'TEXT_PREV_POST'    => self::t('Previous article'),
-                'TEXT_READ_MORE'    => self::t('Read more'),
-            );
-            return array($vars,$default_replacements);
-        }   // end function getPlaceholders()
-        
-        /**
-         *
-         * @access protected
-         * @return
-         **/
-        protected static function getArticle(int $articleID)
-        {
-            list($order_by,$direction) = self::getOrder(self::$sectionID);
-            $prev_dir = ($direction=='DESC'?'ASC':'DESC');
-            $sql = sprintf(
-                "SELECT `t1`.*, " .
-                "  (SELECT `link` FROM `%s%s` AS `t2` WHERE `t2`.`$order_by` > `t1`.`$order_by` AND `section_id`=%d AND `active`=1 ORDER BY `$order_by` $prev_dir LIMIT 1 ) as `prev_link`, ".
-                "  (SELECT `link` FROM `%s%s` AS `t3` WHERE `t3`.`$order_by` < `t1`.`$order_by` AND `section_id`=%d AND `active`=1 ORDER BY `$order_by` $direction LIMIT 1 ) as `next_link` " .
-                "FROM `%s%s` AS `t1` " .
-                "WHERE `article_id`=%d",
-                cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID,
-                cmsbridge::dbprefix(), self::$tables['articles'], self::$sectionID,
-                cmsbridge::dbprefix(), self::$tables['articles'], $articleID
-            );
-            $stmt = cmsbridge::db()->query($sql);
-            if(!empty($stmt)) {
-                $article = $stmt->fetch();
-                // get users
-                $users = self::getUsers();
-                // add "unknown" user
-                $users[0] = array(
-                    'username' => 'unknown',
-                    'display_name' => 'unknown',
-                    'email' => ''
-                );
-                return self::processArticle($article, $users);
-            }
-            return array();
-        }   // end function getArticle()
 
         /**
          *
@@ -1072,18 +1205,324 @@ if(!class_exists('journal',false))
          * @access protected
          * @return
          **/
-        protected static function getPreviewImage(array $images, string $alt, $articleID)
+        protected static function getAssignedTags(int $articleID)
+        {
+            $tags = array();
+
+            $query_tags = cmsbridge::db()->query(sprintf(
+                "SELECT  t1.* " .
+                "FROM `%s%s` AS t1 " .
+                "JOIN `%s%s` AS t2 " .
+                "ON t1.`tag_id`=t2.`tag_id` ".
+                "JOIN `%s%s` AS t3 ".
+                "ON t2.`article_id`=t3.`article_id` ".
+                "WHERE t2.`article_id`=%d",
+                cmsbridge::dbprefix(), self::$tables['tags'],
+                cmsbridge::dbprefix(), self::$tables['tags_articles'],
+                cmsbridge::dbprefix(), self::$tables['articles'], $articleID
+            ));
+
+            if (!empty($query_tags) && $query_tags->rowCount() > 0) {
+                while($t = $query_tags->fetch()) {
+                    $tags[$t['tag_id']] = $t;
+                }
+            }
+
+            return $tags;
+        }   // end function getAssignedTags()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getBytes(string $val) : int
+        {
+            $val  = trim($val);
+            $last = strtolower($val[strlen($val)-1]);
+            $val  = intval($val);
+            switch ($last) {
+                case 'g':
+                    $val *= 1024;
+                    // no break
+                case 'm':
+                    $val *= 1024;
+                    // no break
+                case 'k':
+                    $val *= 1024;
+            }
+
+            return $val;
+        }   // end function getBytes()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getGalleries()
+        {
+            $dir   = __DIR__.'/../js/galleries';
+            $gal   = array();
+            // get available views
+            if(CMSBRIDGE_CMS_BC1) {
+                $gal = CAT_Helper_Directory::getDirectories($dir,$dir);
+            } elseif(CMSBRIDGE_CMS_BC2) {
+                $gal = \CAT\Helper\Directory::findDirectories(
+                    $dir,
+                    array(
+                        'remove_prefix' => true,
+                    )
+                );
+            } else {
+                $dirs = array_filter(glob($dir.'/*'), 'is_dir');
+                foreach($dirs as $dir) {
+                    $gal[] = pathinfo($dir,PATHINFO_FILENAME);
+                }
+            }
+            return $gal;
+        }   // end function getGalleries()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getGroup(int $groupID)
+        {
+            $query  = cmsbridge::db()->query(sprintf(
+                "SELECT * FROM `%s%s` " .
+                "WHERE `group_id`=%d",
+                cmsbridge::dbprefix(), self::$tables['groups'], $groupID
+            ));
+            if ($query->rowCount() > 0) {
+                $group = $query->fetch();
+                $allowed = self::getAllowedSuffixes();
+                $group['id_key'] = cmsbridge::admin()->getIDKEY($group['group_id']);
+                $group['image']  = '';
+                foreach($allowed as $suffix) {
+                    if (file_exists(CMSBRIDGE_MEDIA_FULLDIR.'/'.self::$settings['image_subdir'].'/group'.$group['group_id'].'.'.$suffix)) {
+                        $group['image'] = CMSBRIDGE_CMS_URL.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/group'.$group['group_id'].'.'.$suffix;
+                        break;
+                    }
+                }
+                return $group;
+            }
+        }   // end function getGroup()
+
+        /**
+         * get groups for section with ID $section_id
+         *
+         * @param   int   $section_id
+         * @return
+         **/
+        protected static function getGroups(?int $section_id=0) : array
+        {
+            if(empty($section_id)) {
+                $section_id = self::$sectionID;
+            }
+            $groups = array();
+            $query  = cmsbridge::db()->query(sprintf(
+                "SELECT * FROM `%s%s` " .
+                "WHERE `section_id`=%d ORDER BY `position` ASC",
+                cmsbridge::dbprefix(), self::$tables['groups'], $section_id
+            ));
+            if ($query->rowCount() > 0) {
+                $allowed = self::getAllowedSuffixes();
+                // Loop through groups
+                while ($group = $query->fetch()) {
+                    $group['id_key'] = cmsbridge::admin()->getIDKEY($group['group_id']);
+                    $group['image']  = '';
+                    foreach($allowed as $suffix) {
+                        if (file_exists(CMSBRIDGE_MEDIA_FULLDIR.'/'.self::$settings['image_subdir'].'/group'.$group['group_id'].'.'.$suffix)) {
+                            $group['image'] = CMSBRIDGE_CMS_URL.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/group'.$group['group_id'].'.'.$suffix;
+                            break;
+                        }
+                    }
+                    $groups[] = $group;
+                }
+            }
+            return $groups;
+        }   // end function getGroups()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getImages(int $articleID)
+        {
+            $settings = self::getSettings();
+            $stmt = cmsbridge::db()->query(sprintf(
+                "SELECT * FROM `%s%s` t1 " .
+                "JOIN `%s%s` t2 ".
+                "ON t1.`id`=t2.`pic_id` ".
+                "WHERE `t2`.`article_id`=%d " .
+                "ORDER BY `position`,`id` ASC",
+                cmsbridge::dbprefix(), self::$tables['images'],
+                cmsbridge::dbprefix(), self::$tables['articles_img'],
+                intval($articleID)
+            ));
+            return $stmt->fetchAll();
+        }   // end function getImages()
+
+        /**
+         *
+         * @access
+         * @return
+         **/
+        protected static function getOrder()
+        {
+            $settings  = self::getSettings(self::$sectionID);
+            $order_by  = 'position'; // default
+            $direction = 'ASC';
+            if($settings['view_order']!=0) {
+            switch($settings['view_order']) {
+                case 1:
+                    $order_by = "published_when";
+                    $direction = 'DESC';
+                    break;
+                case 2:
+                    $order_by = "published_until";
+                    $direction = 'DESC';
+                    break;
+                case 3:
+                    $order_by = "posted_when";
+                    $direction = 'DESC';
+                    break;
+                case 4:
+                    $order_by = "article_id";
+                    $direction = 'DESC';
+                    break;
+            }
+            }
+            return array($order_by,$direction);
+        }   // end function getOrder()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getPlaceholders()
+        {
+            // all known placeholders
+            $vars = array(
+                'BACK_LINK',                    // back to list link
+                'BASE_URL',                     // base URL of the module
+                'CONTENT',                      // content_short + content_long
+                'CONTENT_BLOCK2',               // optional block 2
+                'CONTENT_LONG',                 // long content
+                'CONTENT_SHORT',                // short content (teaser)
+                'CREATED_DATE',                 // article added
+                'CREATED_TIME',                 // article added time
+                'DISPLAY_GROUP',                // wether to show the group name
+                'DISPLAY_IMAGE',                // wether to show the preview image
+                'DISPLAY_NAME',                 // user's (who posted) display name
+                'DISPLAY_PREVIOUS_NEXT_LINKS',  // wether to show prev/next
+                'EMAIL',                        // user's (who posted) email address
+                'GROUP_ID',                     // ID of the group the article is linked to
+                'GROUP_IMAGE',                  // image of the group
+                'GROUP_IMAGE_URL',              // image url
+                'GROUP_TITLE',                  // group title
+                'PREVIEW_IMAGE',                // preview image
+        		'PREVIEW_IMAGE_URL',            // URL of preview image without <img src>
+                'PREVIEW_IMAGE_THUMB',          // preview image
+        		'PREVIEW_IMAGE_THUMB_URL',      // URL of preview image without <img src>
+                'IMAGES',                       // gallery images
+                'IN_GROUP',                     // text "in group"
+                'LINK',                         // "read more" link
+                'MODI_DATE',                    // article modification date
+                'MODI_TIME',                    // article modification time
+                'NEXT_LINK',                    // next link
+                'NEXT_PAGE_LINK',               // next page link
+                'OF',                           // text "of" ("von")
+                'OUT_OF',                       // text "out of" ("von")
+                'PAGE_TITLE',                   // page title
+                'POST_ID',                      // ID of the article
+                'POST_OR_GROUP_IMAGE',          // use group image if there's no preview image
+'POST_TAGS',                    // Tags
+                'PREVIOUS_LINK',                // prev link
+                'PREVIOUS_PAGE_LINK',           // prev page link
+                'PUBLISHED_DATE',               // published date
+                'PUBLISHED_TIME',               // published time
+                'SHORT',                        // alias for CONTENT_SHORT
+                'SHOW_READ_MORE',               // wether to show "read more" link
+'TAGS',                         // tags
+                'TAG_LINK',
+                'TAG',
+                'TAGCOLOR',                     // background color for tag
+                'TAGHOVERCOLOR',                // mouseover background color for tag
+                'TEXTCOLOR',
+                'TEXTHOVERCOLOR',
+                'AT',                           // text for "at" ("um")
+                'BACK',                         // text for "back" ("zurueck")
+                'MODIFIED',                     // text for "last changed" ("zuletzt geaendert")
+                'NEXT',                         // text for "next article" ("naechster Beitrag")
+                'O_CLOCK',                      // text for "o'clock" ("Uhr")
+                'ON',                           // text for "on" ("am")
+                'COMPOSED_BY',                  // text for "posted by" ("verfasst von")
+                'PREV',                         // text for "previous article" ("voriger Beitrag")
+                'READ_MORE',                    // text for "read more" ("Weiterlesen")
+                'TITLE',                        // article title (heading)
+                'USER_ID',                      // user's (who posted) ID
+                'USERNAME',                     // user's (who posted) username
+            );
+            $default_replacements = array(
+                'AT'            => self::t('at'),
+                'BACK'          => self::t('Back'),
+                'BASE_URL'      => CMSBRIDGE_CMS_URL.'/modules/'.JOURNAL_MODDIR,
+                'IN_GROUP'      => self::t('in group'),
+                'MODIFIED'      => self::t('Last modified'),
+                'NEXT'          => self::t('Next article'),
+                'O_CLOCK'       => self::t("o'clock"),
+                'ON'            => self::t('on'),
+                'COMPOSED_BY'   => self::t('Posted by'),
+                'PREV'          => self::t('Previous article'),
+                'READ_MORE'     => self::t('Read more'),
+            );
+            return array($vars,$default_replacements);
+        }   // end function getPlaceholders()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getPosition(string $table, string $field, int $ID)
+        {
+            $stmt = cmsbridge::db()->query(sprintf(
+                "SELECT max(`position`) AS `position` FROM `%s%s` "
+                . "WHERE `$s`=%d",
+                cmsbridge::dbprefix(), self::$tables[$table], $field, $ID
+            ));
+            if(!empty($stmt)) {
+                $res   = $stmt->fetch();
+                $pos   = $res['position'];
+                $pos++;
+            } else {
+                $pos = 1;
+            }
+            return $pos;
+        }   // end function getPosition()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function getPreviewImage(array $images, string $alt, int $articleID, bool $thumb=false)
         {
             // preview image
             if(!empty($images)) {
                 foreach($images as $img) {
-                    if($img['previmg']=='Y') {
-                        return "<img src='".JOURNAL_IMGURL.'/'.$articleID.'/thumb/'.$img['picname']."' alt='".$alt."' />";
+                    if($img['preview']=='Y') {
+                        return "<img src='".JOURNAL_IMGURL.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$img['picname']."' alt='".$alt."' />";
                     }
                 }
             }
         }   // end function getPreviewImage()
-        
+
         /**
          *
          * @access protected
@@ -1172,6 +1611,7 @@ if(!class_exists('journal',false))
             // ----- filter by tags? ---------------------------------------------------
             if(isset($_GET['tags']) && strlen($_GET['tags'])) {
                 $filter_articles = array();
+// TODO!!!
                 $tags = mod_journal_escape_tags($_GET['tags']);
                 $r = cmsbridge::db()->query(sprintf(
                     "SELECT `t2`.`article_id` FROM `%s%s` as `t1` ".
@@ -1216,12 +1656,13 @@ if(!class_exists('journal',false))
                             self::$settings['thumbheight']
                         ) = explode('x', self::$settings['imgthumbsize'], 2);
                     }
+                    self::$settings_db = true;
                 } else {
                     // defaults
                     self::$settings = array(
                         'append_title'      => 'N',
                         'block2'            => 'N',
-                        'crop_preview'      => 'N',
+                        'crop'              => 'N',
                         'gallery'           => 'fotorama',
                         'header'            => '',
                         'image_loop'        => '<img src="[IMAGE]" alt="[DESCRIPTION]" title="[DESCRIPTION]" data-caption="[DESCRIPTION]" />',
@@ -1230,7 +1671,7 @@ if(!class_exists('journal',false))
                         'imgmaxwidth'       => 900,
                         'imgthumbsize'      => '100x100',
                         'mode'              => 'advanced',
-                        'articles_per_page'    => 0,
+                        'articles_per_page' => 0,
                         'tag_header'        => '',
                         'tag_footer'        => '',
                         'thumbheight'       => 100,
@@ -1238,6 +1679,8 @@ if(!class_exists('journal',false))
                         'use_second_block'  => 'N',
                         'view'              => 'default',
                         'view_order'        => 0,
+                        'subdir'            => 'articles',
+                        'image_subdir'      => '.articles',
                     );
 
                     self::$settings['footer'] = '<table class="mod_journal_table" style="visibility:[DISPLAY_PREVIOUS_NEXT_LINKS]">
@@ -1249,13 +1692,13 @@ if(!class_exists('journal',false))
 </table>';
 
                     self::$settings['article_header'] = '<h2>[TITLE]</h2>
-<div class="mod_journal_metadata">[TEXT_POSTED_BY] [DISPLAY_NAME] [TEXT_ON] [PUBLISHED_DATE] [TEXT_AT] [PUBLISHED_TIME] [TEXT_O_CLOCK] | [TEXT_LAST_CHANGED] [MODI_DATE] [TEXT_AT] [MODI_TIME] [TEXT_O_CLOCK]</div>';
+<div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] | [MODIFIED] [MODI_DATE] [TEXT_AT] [MODI_TIME] [O_CLOCK]</div>';
 
                     self::$settings['article_footer'] =' <div class="mod_journal_spacer"></div>
 <table class="mod_journal_table" style="visibility: [DISPLAY_PREVIOUS_NEXT_LINKS]">
 <tr>
     <td class="mod_journal_table_left">[PREVIOUS_PAGE_LINK]</td>
-    <td class="mod_journal_table_center"><a href="[BACK]">[TEXT_BACK]</a></td>
+    <td class="mod_journal_table_center"><a href="[BACK_LINK]">[BACK]</a></td>
     <td class="mod_journal_table_right">[NEXT_PAGE_LINK]</td>
 </tr>
 </table>
@@ -1267,13 +1710,13 @@ if(!class_exists('journal',false))
     </div>
     <div class="mod_journal_teasertext">
         <a href="[LINK]"><h3>[TITLE]</h3></a>
-        <div class="mod_journal_metadata">[TEXT_POSTED_BY] [DISPLAY_NAME] [TEXT_ON] [PUBLISHED_DATE] [TEXT_AT] [PUBLISHED_TIME] [TEXT_O_CLOCK] </div>
+        <div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] </div>
             <div class="mod_journal_shorttext">
                 [SHORT]
             </div>
             <div class="mod_journal_bottom">
                 <div class="mod_journal_tags">[TAGS]</div>
-                <div class="mod_journal_readmore" style="visibility:[SHOW_READ_MORE];"><a href="[LINK]">[TEXT_READ_MORE]</a></div>
+                <div class="mod_journal_readmore" style="visibility:[SHOW_READ_MORE];"><a href="[LINK]">[READ_MORE]</a></div>
             </div>
         </div>
     </div>
@@ -1408,14 +1851,14 @@ if(!class_exists('journal',false))
                     )
                 );
             } else {
-                $dirs = array_filter(glob(__DIR__.'/../views/*'), 'is_dir');
+                $dirs = array_filter(glob($dir.'/*'), 'is_dir');
                 foreach($dirs as $dir) {
                     $views[] = pathinfo($dir,PATHINFO_FILENAME);
                 }
             }
             return $views;
         }   // end function getViews()
-        
+
         /**
          *
          * @access protected
@@ -1426,7 +1869,7 @@ if(!class_exists('journal',false))
             $g = self::getGroup($groupID);
             return isset($g['group_id']);
         }   // end function groupExists()
-        
+
         /**
          * what a ***censored***: sprintf() does not work with utf8!
          *
@@ -1464,7 +1907,7 @@ if(!class_exists('journal',false))
                 \CAT\Base::db()->$func($articleID, $table, 'article_id', 'position', 'section_id');
             }
         }   // end function moveUpDown()
-        
+
         /**
          *
          * @access protected
@@ -1472,6 +1915,10 @@ if(!class_exists('journal',false))
          **/
         protected static function printPage(string $template, array $data)
         {
+            if(!file_exists($template)) {
+                return 'no such template';
+            }
+
             // settings
             $settings = self::getSettings(self::$sectionID);
 
@@ -1489,13 +1936,13 @@ if(!class_exists('journal',false))
 
             return $content;
         }   // end function printPage()
-        
+
         /**
          *
          * @access
          * @return
          **/
-        protected static function processArticle(array $article, array $users)
+        protected static function processArticle(array $article, array $users) : array
         {
             // make sure the settings are loaded
             self::getSettings(self::$sectionID);
@@ -1513,20 +1960,20 @@ if(!class_exists('journal',false))
         	$icon = '';
             $t = time();
             if ($article['published_when']<=$t && $article['published_until']==0) {
-                $article['icon'] ='<span class="fa fa-fw fa-calendar-o" title="'.cmsbridge::t('Article is visible').'"></span>';
+                $article['is_visible'] = true;
             } elseif (($article['published_when']<=$t || $article['published_when']==0) && $article['published_until']>=$t) {
-                $article['icon'] ='<span class="fa fa-fw fa-calendar-check-o nwi-active" title="'.cmsbridge::t('Article is visible').'"></span>';
+                $article['is_visible'] = true;
             } else {
-                $article['icon'] ='<span class="fa fa-fw fa-calendar-times-o nwi-inactive" title="'.cmsbridge::t('Article is invisible').'"></span>';
+                $article['is_visible'] = false;
             }
 
             // posting (preview) image
-            if ($article['image'] != "") {
-                $article_img = "<img src='".JOURNAL_IMGURL.'/'.$article['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
-            } else {
-                $article_img = "<img src='".JOURNAL_NOPIC."' alt='".self::t('empty placeholder')."' style='width:".self::$settings['thumbwidth']."px;' />";
-            }
-            $article['article_img'] = $article_img;
+            #if ($article['image'] != "") {
+            #    $article_img = "<img src='".JOURNAL_IMGURL.'/'.$article['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+            #} else {
+            #    $article_img = "<img src='".JOURNAL_NOPIC."' alt='".self::t('empty placeholder')."' style='width:".self::$settings['thumbwidth']."px;' />";
+            #}
+            #$article['article_img'] = $article_img;
 
             // article link
             $article['article_link'] = cmsbridge::getPageLink(self::$page['route'].'/'.$article['link']);
@@ -1552,11 +1999,6 @@ if(!class_exists('journal',false))
                 }
             }
 
-            // publishing date
-            if ($article['published_when'] === '0') {
-                $article['published_when'] = time();
-            }
-
             if ($article['published_when'] > $article['posted_when']) {
                 $article['article_date'] = cmsbridge::formatDate($article['published_when']);
                 $article['article_time'] = cmsbridge::formatTime($article['published_when']);
@@ -1564,15 +2006,17 @@ if(!class_exists('journal',false))
                 $article['article_date'] = cmsbridge::formatDate($article['posted_when']);
                 $article['article_time'] = cmsbridge::formatTime($article['posted_when']);
             }
-            $article['published_date'] = cmsbridge::formatDate($article['published_when']);
-            $article['published_time'] = cmsbridge::formatTime($article['published_when']);
+            $article['published_date'] = $article['article_date'];
+            $article['published_time'] = $article['article_time'];
 
-            $article['publishing_date'] = cmsbridge::formatDate($article['published_when']==0 ? time() : $article['published_when'])
-                                     . ' ' . $article['published_time'];
-            $article['publishing_end_date'] = ( $article['published_until']!=0 ? cmsbridge::formatDate($article['published_until']) : '' );
-            #if(strlen($article['publishing_end_date'])>0) {
-            #    $article['publishing_end_date'] .= ' ' . gmdate(TIME_FORMAT, $article['published_until']+TIMEZONE);
-            #}
+            #$article['publishing_date'] = cmsbridge::formatDate($article['published_when']==0 ? time() : $article['published_when'])
+            #                         . ' ' . $article['published_time'];
+            $article['publishing_date']     = ( $article['published_when'] !=0 )
+                                            ? cmsbridge::formatDate($article['published_when']).' '.$article['published_time']
+                                            : '';
+            $article['publishing_end_date'] = ( $article['published_until']!=0 )
+                                            ? cmsbridge::formatDate($article['published_until']).' '.cmsbridge::formatTime($article['published_until'])
+                                            : '';
 
             if (file_exists($article['article_path'])) {
                 $article['create_date'] = cmsbridge::formatDate(filemtime($article['article_path']));
@@ -1595,11 +2039,11 @@ if(!class_exists('journal',false))
             }
 
             // fallback to group image if there's no preview image
-            $article['article_or_group_image'] = (
-                ($article['image'] != "")
-                ? $article['article_img']
-                : $article['group_image']
-            );
+            #$article['article_or_group_image'] = (
+            #    ($article['image'] != "")
+            #    ? $article['article_img']
+            #    : $article['group_image']
+            #);
 
             // user
             $article['display_name'] = isset($users[$article['posted_by']]) ? $users[$article['posted_by']]['display_name'] : '<i>'.$users[0]['display_name'] .'</i>';
@@ -1662,9 +2106,9 @@ if(!class_exists('journal',false))
                 $default_replacements,
                 array_change_key_case($article,CASE_UPPER),
                 array(
-                    'IMAGE'           => $article['article_img'],
-        			'IMAGE_URL' 	  => JOURNAL_IMGURL.$article['image'],
-                    'IMAGES'          => implode("", self::renderImages($articleID,$images)),
+                    'PREVIEW_IMAGE_THUMB'     => $article['article_img'],
+        			'PREVIEW_IMAGE_THUMB_URL' => JOURNAL_IMGURL.$article['article_img'],
+                    'IMAGES'                  => implode("", self::renderImages($articleID,$images)),
                     'SHORT'           => $article['content_short'],
                     'LINK'            => $article['article_link'],
                     'MODI_DATE'       => $article['article_date'],
@@ -1672,7 +2116,7 @@ if(!class_exists('journal',false))
                     'PAGE_TITLE'      => $article['page_title'],
                     'TAGS'            => implode(" ", $tags),
                     'CONTENT'         => $article['content_short'].$article['content_long'],
-                    'BACK'            => $page_link,
+                    'BACK_LINK'       => $page_link,
                     'PREVIOUS_PAGE_LINK'
                         => (strlen($article['prev_link'])>0 ? '<a href="'.$article['prev_link'].'">'.self::t('Previous article').'</a>' : null),
                     'NEXT_PAGE_LINK'
@@ -1761,7 +2205,7 @@ if(!class_exists('journal',false))
                     array(
                         JOURNAL_IMGURL.'/'.$articleID.'/'.$img['picname'],
                         $img['picdesc'],
-						JOURNAL_IMGURL.'/'.$articleID.'/thumb/'.$img['picname'],
+						JOURNAL_IMGURL.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$img['picname'],
 						$thumbsizeraw[0],
 						$thumbsizeraw[1],
 						CMSBRIDGE_CMS_URL
@@ -1771,7 +2215,7 @@ if(!class_exists('journal',false))
             }
             return $rendered;
         }   // end function renderImages()
-        
+
 
         /**
          *
@@ -1782,15 +2226,18 @@ if(!class_exists('journal',false))
         {
             $tpl_data = array();
             $list     = array();
+            $position = 0;
+            $cnt      = count($articles);
 
             // make sure the settings are loaded
             self::getSettings(self::$sectionID);
 
+            // get groups
+            $groups   = self::getGroups();
+
             // offset (paging)
             if (isset($_GET['p']) and is_numeric($_GET['p']) and $_GET['p'] > 0) {
                 $position = intval($_GET['p']);
-            } else {
-                $position = 0;
             }
 
             list($vars,$default_replacements) = self::getPlaceholders();
@@ -1801,31 +2248,61 @@ if(!class_exists('journal',false))
                 // get assigned images
                 $images = self::getImages($article['article_id'],false);
                 // number of images for later use
-                $anz_article_img = count($images);
+                $img_count = count($images);
                 // no "read more" link if no long content and no images
-                if ( (strlen($article['content_long']) < 9) && ($anz_article_img < 1)) {
+                if ( (strlen($article['content_long']) < 9) && ($img_count < 1)) {
                     $article['article_link'] = '#" onclick="javascript:void(0);return false;" style="cursor:no-drop;';
                 }
                 // preview image
-                if(!empty($anz_article_img)) {
+                $prev_img_found = false;
+                if(!empty($img_count)) {
                     foreach($images as $img) {
                         if($img['preview']=='Y') {
-                            $article['article_img'] =  "<img src='".JOURNAL_IMGURL.'/'.$article['article_id'].'/thumb/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                            $article['preview_image_thumb'] =  "<img src='".JOURNAL_IMGURL.'/'.$article['article_id'].'/'.JOURNAL_THUMBDIR.'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                            $article['preview_image'] =  "<img src='".JOURNAL_IMGURL.'/'.$article['article_id'].'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                            $prev_img_found = true;
                         }
                     }
                 }
+                // if no preview image was found, use the group image
+                $g = array();
+                foreach($groups as $id => $group) {
+                    if($group['group_id']==$article['group_id']) {
+                        $g = $group;
+                    }
+                }
+                if(isset($g['image'])) {
+                    $article['group_image'] = "<img src='".$g['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                    if($prev_img_found == false) {
+                        $article['preview_image_thumb'] = "<img src='".$g['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                        $article['preview_image'] =  "<img src='".$g['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                    }
+                }
+
+                // nothing at all
+                if(!isset($article['preview_image_thumb'])) {
+                    $article['preview_image_thumb'] = '';
+                }
+                if(!isset($article['preview_image'])) {
+                    $article['preview_image'] = '';
+                }
+
                 // set replacements for current line
                 $replacements = array_merge(
                     $default_replacements,
                     array_change_key_case($article,CASE_UPPER),
                     array(
-                        'IMAGE'           => $article['article_img'],
+                        'PREVIEW_IMAGE_THUMB' => $article['preview_image_thumb'],
+                        'PREVIEW_IMAGE'       => $article['preview_image'],
                         'SHORT'           => $article['content_short'],
                         'LINK'            => $article['article_link'],
                         'MODI_DATE'       => $article['article_date'],
                         'MODI_TIME'       => $article['article_time'],
-                        'SHOW_READ_MORE'  => (strlen($article['content_long'])<1 && ($anz_article_img<1))
+                        'SHOW_READ_MORE'  => (strlen($article['content_long'])<1 && ($img_count<1))
                                              ? 'hidden' : 'visible',
+// !!!!! TODO: handle offsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        'DISPLAY_PREVIOUS_NEXT_LINKS'
+                                          => 'hidden',
                     )
                 );
 
@@ -1870,7 +2347,7 @@ if(!class_exists('journal',false))
                     $tpl_data
                 );
         }   // end function renderList()
-        
+
         /**
          *
          * @access protected
@@ -1899,7 +2376,104 @@ if(!class_exists('journal',false))
             }
             return '';
         }   // end function renderTags()
-        
+
+        /**
+         * resize image
+         *
+         * return values:
+         *    true - ok
+         *    1    - image is smaller than new size
+         *    2    - invalid type (unable to handle)
+         *
+         * @param $src    - image source
+         * @param $dst    - save to
+         * @param $width  - new width
+         * @param $height - new height
+         * @param $crop   - 0=no, 1=yes
+         **/
+        protected static function resize($src, $dst, $width, $height, $crop=0)
+        {
+            $type = strtolower(pathinfo($src,PATHINFO_EXTENSION));
+            if ($type == 'jpeg') {
+                $type = 'jpg';
+            }
+            $func = null;
+            switch ($type) {
+                case 'bmp':
+                    $func = 'imagecreatefromwbmp';
+                    break;
+                case 'gif':
+                    $func = 'imagecreatefromgif';
+                    break;
+                case 'jpg':
+                    $func = 'imagecreatefromjpeg';
+                    break;
+                case 'png':
+                    $func = 'imagecreatefrompng';
+                    break;
+            }
+
+            if(!function_exists($func)) {
+                return false;
+            } else {
+                try{
+                    $img = $func($src);
+                } catch (\Exception $e) {
+                    return false;
+                }
+            }
+
+            if(!is_resource($img)) {
+                return false;
+            }
+
+            // resize
+            list($w, $h) = getimagesize($src);
+            if ($crop) {
+                if ($w < $width or $h < $height) {
+                    return 1;
+                }
+                $ratio = max($width/$w, $height/$h);
+                $h = $height / $ratio;
+                $x = ($w - $width / $ratio) / 2;
+                $w = $width / $ratio;
+            } else {
+                if ($w < $width and $h < $height) {
+                    return 1;
+                }
+                $ratio = min($width/$w, $height/$h);
+                $width = $w * $ratio;
+                $height = $h * $ratio;
+                $x = 0;
+            }
+
+            $new = imagecreatetruecolor($width, $height);
+
+            // preserve transparency
+            if ($type == "gif" or $type == "png") {
+                imagecolortransparent($new, imagecolorallocatealpha($new, 0, 0, 0, 127));
+                imagealphablending($new, false);
+                imagesavealpha($new, true);
+            }
+
+            imagecopyresampled($new, $img, 0, 0, $x, 0, $width, $height, $w, $h);
+
+            $r = false;
+            try {
+                switch ($type) {
+                    case 'bmp': $r = imagewbmp($new, $dst); break;
+                    case 'gif': $r = imagegif($new, $dst); break;
+                    case 'jpg': $r = imagejpeg($new, $dst); break;
+                    case 'png': $r = imagepng($new, $dst); break;
+                }
+                return true;
+            } catch ( \Exception $e ) {
+                return false;
+            } finally {
+                return $r;
+            }
+        }
+
         /**
          *
          * @access protected
@@ -1909,6 +2483,7 @@ if(!class_exists('journal',false))
         {
             // reset errors
             self::$errors = array();
+            self::$highlighted = array();
 
             // validate article ID
             $articleID = intval($_REQUEST['article_id']);
@@ -1917,43 +2492,52 @@ if(!class_exists('journal',false))
                 return false;
             }
 
-            // dates
-            $publishedwhen = (
-                (isset($_REQUEST['publishdate']) && !empty($_REQUEST['publishdate']))
-                ? cmsbridge::escapeString($_REQUEST['publishdate']) : '0'
-            );
-            $publisheduntil = (
-                (isset($_REQUEST['enddate']) && !empty($_REQUEST['enddate']))
-                ? cmsbridge::escapeString($_REQUEST['enddate']) : '0'
-            );
+            // create a query builder instance to collect the data
+            $qb = cmsbridge::conn()->createQueryBuilder();
+            $c  = $qb->getConnection();
 
-            if(!empty($publishedwhen)) {
-                $publishedwhen = strtotime($publishedwhen);
+            // ===== validate dates ============================================
+            $from = $until = null;
+            if(isset($_REQUEST['publishdate'])) {
+                $from = '0';
+                if(!empty($_REQUEST['publishdate'])) {
+                    $from = strtotime(cmsbridge::escapeString($_REQUEST['publishdate']));
+                }
+                $qb->set($c->quoteIdentifier('published_when'), $from);
             }
-            if(!empty($publisheduntil)) {
-                $publisheduntil = strtotime($publisheduntil);
+            if(isset($_REQUEST['enddate'])) {
+                $until = '0';
+                if(!empty($_REQUEST['enddate'])) {
+                    $until = strtotime(cmsbridge::escapeString($_REQUEST['enddate']));
+                }
+                $qb->set($c->quoteIdentifier('published_until'), $until);
             }
-
-            if(!empty($publishedwhen) && !empty($publisheduntil) && $publishedwhen > $publisheduntil) {
+            if(
+                   !empty($from)
+                && !empty($until)
+                && $from > $until
+            ) {
                 self::$errors[] = self::t('Expiry date cannot be *before* starting date!');
                 self::$highlighted['publishdate'] = 1;
                 self::$highlighted['enddate'] = 1;
             }
 
-            $orig  = self::getArticle($articleID);
-
-            // title and short are mandatory
-            $title = cmsbridge::escapeString($_REQUEST['title']);
-            $short = cmsbridge::escapeString($_REQUEST['short']);
-            if(empty($title) || empty($short)) {
+            // ===== title and short are mandatory =============================
+            if(empty($_REQUEST['title']) || empty($_REQUEST['short'])) {
                 self::$errors[] = self::t('Title and short text are mandatory!');
                 self::$highlighted['title'] = 1;
                 self::$highlighted['short'] = 1;
+            } else {
+                $qb->set($c->quoteIdentifier('title'), $c->quote($_REQUEST['title']));
+                $qb->set($c->quoteIdentifier('content_short'), $c->quote($_REQUEST['short']));
             }
 
             if(!empty(self::$errors)) {
                 return false;
             }
+
+            // ===== get original data =========================================
+            $orig  = self::getArticle($articleID);
 
             // if the link is empty, generate it from the title
             $link = cmsbridge::escapeString($_REQUEST['link']);
@@ -1964,50 +2548,128 @@ if(!class_exists('journal',false))
                     $link = page_filename($link);
                 }
             }
+            $qb->set($c->quoteIdentifier('link'), $c->quote($link));
 
-            // validate group
+            // ===== validate other data =======================================
             $group = cmsbridge::escapeString($_REQUEST['group']);
             if(!self::groupExists(intval($group))) {
                 $group = 0;
             }
+            $qb->set($c->quoteIdentifier('group_id'),$group);
 
-            // active state
+            // active
             if(isset($_REQUEST['active'])) {
                 $active = (intval($_REQUEST['active'])==1) ? 1 : 0;
             } else {
                 $active = $orig['active'];
             }
+            $qb->set($c->quoteIdentifier('active'),$active);
 
             // long text (optional)
-            $long = (isset($_REQUEST['long']) ? cmsbridge::escapeString($_REQUEST['long']) : '');
+            $qb->set($c->quoteIdentifier('content_long'), $c->quote((isset($_REQUEST['long']) ? $_REQUEST['long'] : '')));
 
             // block2 (optional)
-            $block2 = (isset($_REQUEST['block2']) ? cmsbridge::escapeString($_REQUEST['block2']) : '');
+            $qb->set($c->quoteIdentifier('content_block2'), $c->quote((isset($_REQUEST['block2']) ? $_REQUEST['block2'] : '')));
 
-            // TODO: publishdate, enddate
-            // Update row
-            $r = cmsbridge::db()->query(self::mb_sprintf(
-                "UPDATE `%s%s`"
-                . " SET `group_id` = %d,"
-                . " `title` = '%s',"
-                . " `link` = '%s',"
-                . " `content_short` = '%s',"
-                . " `content_long` = '%s',"
-                . " `content_block2` = '%s',"
-                . " `active` = %d,"
-                . " `published_when` = '%s',"
-                . " `published_until` = '%s',"
-                . " `posted_when` = '".time()."',"
-                . " `posted_by` = '".cmsbridge::admin()->getUserID()."'"
-                . " WHERE `article_id` = %d",
-                cmsbridge::dbprefix(), self::$tables['articles'],
-                $group, $title, $link, $short, $long, $block2,
-                $active, $publishedwhen, $publisheduntil, $articleID
-            ));
+            // group
+            if (!empty($_REQUEST['group'])) {
+                $gid_value = urldecode($_REQUEST['group']);
+                $values = unserialize($gid_value);
+                if (isset($values['s']) && isset($values['g']) && isset($values['p'])) {
+                    if (intval($values['p'])!=0) {
+                        $group_id = intval($values['g']);
+                        $qb->set($c->quoteIdentifier('group_id'), intval($group_id));
+// !!!!! TODO: Move to another section !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#                        $section_id = intval($values['s']);
+#                        $page_id = intval($values['p']);
+                    }
+                }
+            }
 
-            if(!($r->errorCode()==0)) {
+
+            // ===== save ======================================================
+            $qb->update(sprintf('%s%s',cmsbridge::dbprefix(), self::$tables['articles']))
+               ->where('`article_id`='.$articleID);
+
+            $r = $qb->execute();
+
+            if(!($qb->getConnection()->errorCode()==0)) {
                 self::$errors[] = $r->errorMessage();
                 return false;
+            }
+
+            // ===== tags ======================================================
+            // remove current tags
+            cmsbridge::db()->query(sprintf(
+                "DELETE FROM `%s%s` WHERE `article_id`=%d",
+                cmsbridge::dbprefix(), self::$tables['tags_articles'], $articleID
+            ));
+            $tags = ( isset($_REQUEST['tags']) ? $_REQUEST['tags'] : null );
+            // re-add marked tags
+            if (is_array($tags) && count($tags)>0) {
+                $existing = self::getTags(self::$sectionID,true);
+                foreach (array_values($tags) as $t) {
+                    $t = intval($t);
+                    if (array_key_exists($t, $existing)) {
+                        cmsbridge::db()->query(sprintf(
+                            "INSERT IGNORE INTO `%s%s` VALUES(%d,%d)",
+                            cmsbridge::dbprefix(), self::$tables['tags_articles'],
+                            $articleID, $t
+                        ));
+                    }
+                }
+            }
+
+            // image changes
+            $images = self::getImages($articleID);
+            if(count($images) > 0) {
+                foreach ($images as $row) {
+                    $row_id = $row['id'];
+                    $picdesc = isset($_POST['picdesc'][$row_id])
+                             ? cmsbridge::escapeString(strip_tags($_POST['picdesc'][$row_id]))
+                             : '';
+                    cmsbridge::db()->query(sprintf(
+                        "UPDATE `%s%s` SET `picdesc`='%s' WHERE id=%d",
+                        cmsbridge::dbprefix(), self::$tables['images'], $picdesc, $row_id
+                    ));
+                }
+            }
+
+            // BC1 / WBCE: create access file
+            if(!CMSBRIDGE_CMS_BC2) {
+                $dir = WB_PATH.PAGES_DIRECTORY.self::$page['link'].'/';
+                if(!is_dir($dir)) {
+                    @make_dir($dir,0770);
+                }
+                if (!is_writable($dir)) {
+                    self::$errors[] = self::t('Cannot write access file!');
+                    return false;
+                }
+                $oldfile = $dir.$orig['link'].PAGE_EXTENSION;
+                $newfile = $dir.$link.PAGE_EXTENSION;
+                if ($oldfile != $newfile || !file_exists($newfile)) {
+                    if(file_exists($oldfile)) {
+                        $file_create_time = filemtime($oldfile);
+                        unlink($oldfile);
+                    } else {
+                        $file_create_time = time();
+                    }
+                    self::createAccessFile(intval($articleID), $newfile, $file_create_time);
+                }
+            }
+
+            // BC2: insert route
+            if(CMSBRIDGE_CMS_BC2) {
+// !!!!! TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// der Pfad '/'.self::$page['menu_title'].'/'.$orig['link'] ist falsch
+// korrekten Pfad ermitteln
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                \CAT\Base::router()->updateRoute(
+                    self::$pageID,
+                    '/'.self::$page['menu_title'].'/'.$orig['link'],
+                    '/'.self::$page['menu_title'].'/'.$link,
+                    'N', 'N', 'N'
+                );
             }
 
             return true;
@@ -2018,36 +2680,262 @@ if(!class_exists('journal',false))
          * @access protected
          * @return
          **/
+        protected static function saveArticleImage(string $filename, int $articleID)
+        {
+            // save image to database
+            cmsbridge::db()->query(sprintf(
+                "INSERT INTO `%s%s` " .
+                "(`picname`) " .
+                "VALUES ('%s')",
+                cmsbridge::dbprefix(), self::$tables['images'], $filename
+            ));
+            $stmt  = cmsbridge::db()->query('SELECT LAST_INSERT_ID() AS `id`');
+            $res   = $stmt->fetch();
+            $imgID = $res['id'];
+
+            // append
+            $pos = self::getPosition('articles_img', 'article_id', $articleID);
+
+            // if this is the first image in this article, set to preview
+            $preview = 'N';
+            $imgs = self::getImages($articleID);
+            if(count($imgs)==0) {
+                $preview = 'Y';
+            }
+
+            cmsbridge::db()->query(sprintf(
+                "INSERT INTO `%s%s` " .
+                "(`article_id`,`pic_id`,`position`,`preview`) " .
+                "VALUES (%d, %d, %d, '%s')",
+                cmsbridge::dbprefix(), self::$tables['articles_img'], $articleID, $imgID, $pos, $preview
+            ));
+        }   // end function saveArticleImage()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function saveGroup()
+        {
+            // reset errors
+            self::$errors = array();
+            self::$highlighted = array();
+
+            // validate group ID
+            $groupID = intval($_REQUEST['group_id']);
+            if(empty($groupID) || $groupID==0) {
+                self::$errors[] = self::t('Invalid ID');
+                return false;
+            }
+
+            if(isset($_REQUEST['delete_image'])) {
+                $allowed = self::getAllowedSuffixes();
+                $success = false;
+                foreach($allowed as $suffix) {
+                    if (file_exists(CMSBRIDGE_MEDIA_FULLDIR.'/'.self::$settings['image_subdir'].'/group'.$groupID.'.'.$suffix)) {
+                        $success = unlink(CMSBRIDGE_MEDIA_FULLDIR.'/'.self::$settings['image_subdir'].'/group'.$groupID.'.'.$suffix);
+                        break;
+                    }
+                }
+                if(isset($_REQUEST['ajax'])) {
+                    if (!headers_sent()) {
+                        header('Content-type: application/json');
+                    }
+                    echo json_encode(array("success"=>$success), true);
+                    exit;
+                }
+            }
+
+            // title is the only mandatory field
+            if(empty($_REQUEST['title'])) {
+                self::$errors[] = self::t('Title is mandatory!');
+                self::$highlighted['title'] = 1;
+                return false;
+            } else {
+                $title = cmsbridge::escapeString(strip_tags($_REQUEST['title']));
+            }
+
+            $orig = self::getGroup($groupID);
+
+            // active
+            if(isset($_REQUEST['active'])) {
+                $active = (intval($_REQUEST['active'])==1) ? 1 : 0;
+            } else {
+                $active = $orig['active'];
+            }
+
+            cmsbridge::db()->query(sprintf(
+                'UPDATE `%s%s` SET `title`="%s", `active`=%d WHERE `group_id`=%d',
+                cmsbridge::dbprefix(), self::$tables['groups'], $title, $active, $groupID
+            ));
+
+            // image uploaded?
+            if(isset($_FILES['image'])) {
+                self::handleUpload($groupID,'group');
+            }
+
+        }   // end function saveGroup()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
+        protected static function saveGroupImage(string $filename, int $groupID)
+        {
+
+        }   // end function saveGroupImage()
+
+        /**
+         *
+         * @access protected
+         * @return
+         **/
         protected static function saveSettings()
         {
+            // known settings
             $default = array(
-                'view_order',
-                'header',
-                'article_loop',
-                'footer',
-                'article_header',
-                'article_content',
-                'article_footer',
-                'articles_per_page',
-                'gallery',
-                'use_second_block',
+                'view_order'            => 'int',
+                'header'                => 'string',
+                'article_loop'          => 'string',
+                'footer'                => 'string',
+                'article_header'        => 'string',
+                'article_content'       => 'string',
+                'article_footer'        => 'string',
+                'articles_per_page'     => 'int',
+                'gallery'               => 'string',
+                'use_second_block'      => 'string',
             );
             $advanced = array(
-                'append_title',
-                'block2',
-                'crop',
-                'image_loop',
-                'imgmaxsize',
-                'imgmaxwidth',
-                'imgmaxheight',
-                'imgthumbsize',
-                'view',
-                'append_title',
+                'append_title'          => 'string',
+                'block2'                => 'string',
+                'crop'                  => 'string',
+                'image_loop'            => 'string',
+                'imgmaxsize'            => 'int',
+                'imgmaxwidth'           => 'int',
+                'imgmaxheight'          => 'int',
+                'imgthumbsize'          => 'string',
+                'view'                  => 'string',
+                'append_title'          => 'string',
+                'image_subdir'          => 'string',
             );
+
+            // make sure current settings are loaded
+            self::getSettings();
+            $mode = self::$settings['mode'];
+            $new_gallery = $new_view = false;
+
+            // create a query builder instance to collect the data
+            $qb = cmsbridge::conn()->createQueryBuilder();
+            $c  = $qb->getConnection();
+
+            if(self::$settings_db) {
+                $qb->update(sprintf('%s%s',cmsbridge::dbprefix(), self::$tables['settings']))
+                   ->where('`section_id`='.self::$sectionID);
+                $func = 'set';
+            } else {
+                $qb->insert(sprintf('%s%s',cmsbridge::dbprefix(), self::$tables['settings']))
+                   ->setValue($c->quoteIdentifier('section_id'), self::$sectionID);
+                $func = 'setValue';
+            }
+
+            // changed default settings
+            foreach($default as $var => $type) {
+                if(isset($_REQUEST[$var])) {
+                    if($var=='gallery') {
+                        $val = $_REQUEST['gallery'];
+                        if($val != self::$settings['gallery']) {
+                            $galleries = self::getGalleries();
+                            if(in_array($val,$galleries)) {
+                                include CMSBRIDGE_CMS_PATH.'/modules/'.JOURNAL_MODDIR.'/js/galleries/'.$val.'/settings.php';
+                                $qb->$func('article_content',$c->quote($article_content));
+                                $qb->$func('image_loop',$c->quote($image_loop));
+                                $new_gallery = true;
+                            }
+                        }
+                    }
+                    $qb->set($c->quoteIdentifier($var), ($type=='string' ? $c->quote($_REQUEST[$var]) : intval($_REQUEST[$var])));
+                }
+            }
+
+            // in advanced mode only: changed advanced settings
+            if($mode == 'advanced') {
+                foreach($advanced as $var => $type) {
+                    if(isset($_REQUEST[$var])) {
+                        if($var=='view') {
+                            $val = $_REQUEST['view'];
+                            if($val != self::$settings['view']) {
+                                $views = self::getViews();
+                                if(in_array($val,$views)) {
+                                    include CMSBRIDGE_CMS_PATH.'/modules/'.JOURNAL_MODDIR.'/views/'.$val.'/config.php';
+                                    $qb->$func('header',$c->quote($header));
+                                    $qb->$func('article_loop',$c->quote($article_loop));
+                                    $qb->$func('footer',$c->quote($footer));
+                                    $qb->$func('block2',$c->quote($block2));
+                                    $qb->$func('article_header',$c->quote($article_header));
+                                    $qb->$func('article_content',$c->quote($article_content));
+                                    $qb->$func('article_footer',$c->quote($article_footer));
+                                    $new_view = true;
+                                }
+                            }
+                        }
+
+                        $val = null;
+                        switch($var) {
+                            case 'imgthumbsize':
+                                $w = isset($_REQUEST['thumb_width'])
+                                   ? cmsbridge::escapeString($_REQUEST['thumb_width'])
+                                   : '';
+                                $h = isset($_REQUEST['thumb_height'])
+                                   ? cmsbridge::escapeString($_REQUEST['thumb_height'])
+                                   : '';
+                                $val = implode('x',array($w,$h));
+                                break;
+                            case 'imgmaxsize':
+                                $val = intval($_REQUEST[$var]) * 1024;
+                                break;
+                            case 'article_content':
+                            case 'image_loop':
+                                // ignore if gallery has changed
+                                if(!$new_gallery) {
+                                    $val = $_REQUEST[$var];
+                                }
+                                break;
+                            case 'header':
+                            case 'article_loop':
+                            case 'footer':
+                            case 'block2':
+                            case 'article_header':
+                            case 'article_content':
+                            case 'article_footer':
+                                if(!$new_view) {
+                                    $val = $_REQUEST[$var];
+                                }
+                                break;
+                            default:
+                                if(isset($_REQUEST[$var])) {
+                                    $val = $_REQUEST[$var];
+                                }
+                                break;
+                        }
+                        if(!empty($val)) {
+                            $qb->$func($c->quoteIdentifier($var), ($type=='string' ? $c->quote($val) : intval($val)));
+                        }
+                    }
+                }
+            }
+
+            $r = $qb->execute();
+
+            if(!($qb->getConnection()->errorCode()==0)) {
+                self::$errors[] = $r->errorMessage();
+                return false;
+            }
 
             $save_as_preset = false;
             $preset_dir = null;
-            if(isset($_REQUEST['preset_name'])) {
+            if(isset($_REQUEST['preset_name']) && !empty($REQUEST['preset_name'])) {
                 $preset_name = cmsbridge::escapeString($_REQUEST['preset_name']);
                 $save_as_preset = true;
                 $preset_dir = JOURNAL_DIR.'/views/'.$preset_name;
@@ -2056,101 +2944,12 @@ if(!class_exists('journal',false))
                     return false;
                 }
             }
-            
+
+            self::$settings = null;
             self::getSettings();
-            $mode = self::$settings['mode'];
-
-            foreach($default as $var) {
-                $$var = isset($_REQUEST[$var])
-                      ? cmsbridge::escapeString($_REQUEST[$var])
-                      : '';
-            }
-            foreach($advanced as $var) {
-                if($mode == 'advanced') {
-                    switch($var) {
-                        case 'imgthumbsize':
-                            $w = isset($_REQUEST['thumb_width'])
-                               ? cmsbridge::escapeString($_REQUEST['thumb_width'])
-                               : '';
-                            $h = isset($_REQUEST['thumb_height'])
-                               ? cmsbridge::escapeString($_REQUEST['thumb_height'])
-                               : '';
-                            $$var = implode('x',array($w,$h));
-                            break;
-                        default:
-                            $$var = isset($_REQUEST[$var])
-                                  ? cmsbridge::escapeString($_REQUEST[$var])
-                                  : '';
-                            break;
-                    }
-                } else {
-                    $$var = self::$settings[$var];
-                }
-            }
-
-            if(empty($crop)) {
-                $crop = 'N';
-            }
-
-            if($save_as_preset && !empty($preset_dir)) {
-                if(CMSBRIDGE_CMS_BC2) {
-                    \CAT\Helper\Directory::createDirectory($preset_dir);
-                    $default_css = JOURNAL_DIR.'/views/default/frontend.css';
-                    if(file_exists($default_css)) {
-                        copy($default_css, $preset_dir.'/frontend.css');
-                    }
-                    $fh = fopen($preset_dir.'/config.php','w');
-                    fwrite($fh,'<'.'?'.'php'."\n");
-                    fwrite($fh,'$header = \''.$header."';\n");
-                    fwrite($fh,'$footer = \''.$footer."';\n");
-                    fwrite($fh,'$article_loop = \''.$article_loop."';\n");
-                    fwrite($fh,'$block2 = \''.$block2."';\n");
-                    fwrite($fh,'$article_header = \''.$article_header."';\n");
-                    fwrite($fh,'$article_content = \''.$article_content."';\n");
-                    fwrite($fh,'$article_footer = \''.$article_footer."';\n");
-                    fwrite($fh,'$image_loop = \''.$image_loop."';\n");
-                    fclose($fh);
-                }
-            } else {
-                // Update settings
-                cmsbridge::db()->query(sprintf(
-                    "UPDATE `%s%s`"
-                    . " SET"
-                    . " `view_order` = %d,"
-                    . " `articles_per_page` = '%s',"
-                    . " `header` = '%s',"
-                    . " `article_loop` = '%s',"
-                    . " `footer` = '%s',"
-                    . " `block2` = '%s',"
-                    . " `article_header` = '%s',"
-                    . " `article_content` = '%s',"
-                    . " `article_footer` = '%s',"
-                    . " `image_loop` = '%s',"
-                    . " `gallery` = '%s',"
-                    . " `imgthumbsize`='%s',"
-                    . " `imgmaxwidth`='%s',"
-                    . " `imgmaxheight`='%s',"
-                    . " `imgmaxsize`='%s',"
-                    . " `crop`='%s',"
-                    . " `use_second_block`='%s',"
-                    . " `view`='%s',"
-                    . " `append_title`='%s'"
-                    . " WHERE `section_id` = '%s'",
-                    cmsbridge::dbprefix(), self::$tables['settings'],
-                    intval($view_order), intval($articles_per_page),
-                    $header, $article_loop, $footer, $block2,
-                    $article_header, $article_content, $article_footer, $image_loop,
-                    $gallery, $imgthumbsize, $imgmaxwidth, $imgmaxheight,
-                    $imgmaxsize, $crop, $use_second_block, $view, $append_title,
-                    self::$sectionID
-                ));
-
-                self::$settings = null;
-                self::getSettings();
-            }
         }   // end function saveSettings()
-        
-        
+
+
     }
 
 }

@@ -2,6 +2,7 @@
 .masonry-grid-item--width2 { width: 400px; }
 .masonry-grid {
   background: #DDD;
+  margin: 25px;
 }
 
 /* clear fix */
@@ -25,4 +26,19 @@
 .masonry-grid-item img {
   display: block;
   width: 100%;
+  z-index: 2;
+  position: relative;
+}
+
+div.mod_journal.mod_journal_grid div.masonry-grid div.masonry-grid-item span.masonry-title {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  background-color: #f0f0f0;
+  display: inline-block;
+  width: 100%;
+  padding: 2px 5px;
+}
+.masonry-grid-item:hover > span.masonry-title{
+  z-index:99 !important;
 }

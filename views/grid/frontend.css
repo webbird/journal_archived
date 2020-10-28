@@ -1,22 +1,28 @@
 @import url(../default/frontend.css); 
 
+.mod_journal.mod_journal_grid {
+  width: 100%;
+}
 .mod_journal_grid_wrapper {
   display: grid;
-  grid-gap: 2em 1em;
+  grid-gap: 1%;
 }
 .mod_journal_grid_2columns {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(49%, 1fr));
 }
 .mod_journal_grid_3columns {
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3,1fr);
 }
 .mod_journal_grid_4columns {
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(4,1fr);
 }
 .mod_journal_grid_5columns {
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(20%, 1fr));
 }
-
-.mod_journal_grid_box {
-  padding: 20px;
+div.mod_journal .mod_journal_grid_wrapper div.mod_journal_teaserpic.mod_journal_grid_box {
+  padding: 20px 0;
+}
+div.mod_journal .mod_journal_grid_wrapper div.mod_journal_teaserpic.mod_journal_grid_box a img {
+  max-width: 100%;
+  max-height: 150px;
 }

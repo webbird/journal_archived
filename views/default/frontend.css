@@ -34,3 +34,6 @@
 .mod_journal table.mod_journal_table{
     width:100%;
 }
+
+.mod_journal table.mod_journal_table td.mod_journal_table_center{text-align:center}
+.mod_journal div.mod_journal_spacer{height:3em}

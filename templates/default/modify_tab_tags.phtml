@@ -1,6 +1,6 @@
 <?php if($settings['mode']=='advanced'): ?>
         <div id="main-tab-content3" class="main-tab-content">
-            <p><?php echo self::t('To use tags, edit a post and select the desired articles there.') ?></p>
+            <p><?php echo self::t('To use tags, edit an article and select the desired articles there.') ?></p>
 
             <form method="post" action="<?php echo $data['edit_url'] ?>">
                 <?php echo self::admin()->getFTAN(); ?>
@@ -14,6 +14,8 @@
 <?php endif; ?>
                 <input type="submit" class="mod_img_news_add" value="<?php echo self::t('Add tag') ?>" />
             </form><br />
+
+<?php include 'backend_info_boxes.phtml'; ?>
 
 <?php if(isset($data['tags']) && is_array($data['tags']) && count($data['tags'])>0): ?>
             <table class="table table-sm table-striped">

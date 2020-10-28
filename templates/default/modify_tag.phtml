@@ -11,6 +11,9 @@
 <?php else: ?>
                 <input type="hidden" name="mode" value="advanced" />
 <?php endif; ?>
+
+<?php include 'backend_info_boxes.phtml'; ?>
+
         <table>
             <tr>
             	<td class="setting_name"><?php echo self::t('Tag') ?>:</td>
@@ -42,10 +45,11 @@
 <?php endif; ?>
             <tr>
                 <td colspan="2">
-            		<input name="save_tag" type="submit" value="<?php echo self::t('Save') ?>" />
+            		<input name="save_tag" type="submit" value="<?php echo self::t('Save') ?>" class="btn btn-primary" />
+                    <input name="saveandback" type="submit" value="<?php echo self::t('Save and go back') ?>" class="btn btn-primary" />
             	</td>
             	<td colspan="2" style="text-align:right">
-            		<input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" />
+            		<input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" class="btn btn-secondary" />
             	</td>
             </tr>
         </table>

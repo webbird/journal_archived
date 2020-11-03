@@ -3,14 +3,14 @@
 $header = ''."\n";
 $article_loop = '<div class="mod_journal_group">
     <div class="mod_journal_teaserpic">
-        <a href="[LINK]">[PREVIEW_IMAGE]</a>
+        <a href="[LINK]">[PREVIEW_IMAGE_THUMB]</a>
     </div>
     <div class="mod_journal_teasertext">
         <a href="[LINK]"><h3>[TITLE]</h3></a>
         <div class="mod_journal_shorttext">
             [SHORT]
         </div>
-        <div class="mod_journal_readmore" style="visibility:[SHOW_READ_MORE];"><a href="[LINK]">[TEXT_READ_MORE]</a></div>
+        <div class="mod_journal_readmore" style="visibility:[SHOW_READ_MORE];"><a href="[LINK]">[READ_MORE]</a></div>
         <div class="mod_journal_bottom">
             <div class="mod_journal_tags">[TAGS]</div>
         </div>
@@ -37,7 +37,7 @@ $article_footer = ' <div class="mod_journal_spacer"></div>
 <table class="mod_journal_table" style="visibility: [DISPLAY_PREVIOUS_NEXT_LINKS]">
 <tr>
     <td class="mod_journal_table_left">[PREVIOUS_PAGE_LINK]</td>
-    <td class="mod_journal_table_center"><a href="[BACK]">[TEXT_BACK]</a></td>
+    <td class="mod_journal_table_center"><a href="[BACK]">[BACK]</a></td>
     <td class="mod_journal_table_right">[NEXT_PAGE_LINK]</td>
 </tr>
 </table>

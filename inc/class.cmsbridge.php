@@ -362,6 +362,24 @@ if (!class_exists('cmsbridge', false))
          * @access public
          * @return
          **/
+        public static function getPageForSection(int $sectionID) : int
+        {
+            if (CMSBRIDGE_CMS_BC2) {
+                return \CAT\Sections::getPageForSection($sectionID);
+            }
+            if (CMSBRIDGE_CMS_WBCE) {
+                global $wb;
+                $section = $wb->get_section_details($sectionID);
+                return ( isset($section['page_id']) ? $section['page_id'] : 0 );
+            }
+            return 0;
+        }   // end function getPageForSection()
+
+        /**
+         *
+         * @access public
+         * @return
+         **/
         public static function getPageLink(string $link) : string
         {
             global $wb;
@@ -587,7 +605,7 @@ if (!class_exists('cmsbridge', false))
          **/
         public static function conn()
         {
-            if (CMSBRIDGE_CMS_BC1 === true) {
+            if (CMSBRIDGE_CMS_BC1 === true || CMSBRIDGE_CMS_BC2 === true) {
                 return self::db()->conn();
             }
             if (CMSBRIDGE_CMS_WBCE === true) {
@@ -648,12 +666,13 @@ if (!class_exists('cmsbridge', false))
          * @access public
          * @return
          **/
-        public static function dbsuccess()
+        public static function dbsuccess() : bool
         {
             if(empty(cmsbridge::conn()->errorCode()) || cmsbridge::conn()->errorCode() == '00000')
             {
                 return true;
             }
+            return false;
         }   // end function dbsuccess()
 
         /**

@@ -37,6 +37,13 @@
         }
     });
 
+    /* change view preset */
+    $("select[name=view]").on("change",function(e) {
+        if(confirm('Please note: Unsaved changes are lost if you click ok')) {
+            $("form[name=modify]").submit();
+        }
+    });
+
     /* remove date */
     $("i.far.fa-calendar-times").on("click",function(e) {
         $(e.target).parent().find("input").val("");

@@ -3,11 +3,11 @@
 $header = ''."\n";
 $article_loop = '<div class="mod_journal_group">
     <div class="mod_journal_teaserpic">
-        <a href="[LINK]">[IMAGE]</a>
+        <a href="[LINK]">[PREVIEW_IMAGE_THUMB]</a>
     </div>
     <div class="mod_journal_teasertext">
         <a href="[LINK]"><h3>[TITLE]</h3></a>
-        <div class="mod_journal_metadata">[POSTED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] </div>
+        <div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] </div>
             <div class="mod_journal_shorttext">
                 [SHORT]
             </div>
@@ -28,7 +28,7 @@ $footer = '<table class="mod_journal_table" style="visibility:[DISPLAY_PREVIOUS_
 $article_header = addslashes('<h2>[TITLE]</h2>
 <div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] | [MODIFIED] [MODI_DATE] [AT] [MODI_TIME] [O_CLOCK]</div>');
 $article_content = '<div class="mod_journal_content_short">
-  [IMAGE]
+  [PREVIEW_IMAGE_THUMB]
   [CONTENT_SHORT]
 </div>
 <div class="mod_journal_content_long">[CONTENT_LONG]</div>

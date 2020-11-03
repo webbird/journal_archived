@@ -1,14 +1,14 @@
 <?php
 
 $header = '<div class="mod_journal_blog1_wrapper">';
-$article_loop = '<article class="post">
+$article_loop = '<article class="article">
     <div>
-        <div class="post-image">
-            <a href="[LINK]">[PREVIEW_IMAGE]</a>
+        <div class="mod_journal_article_image">
+            <a href="[LINK]">[PREVIEW_IMAGE_THUMB]</a>
         </div>
-        <div class="post-bind">
-            <div class="post-header">
-                <div class="post-tag">
+        <div class="mod_journal_article_bind">
+            <div class="mod_journal_article_header">
+                <div class="mod_journal_article_tag">
                     [TAGS]
                 </div>
                 <h2>
@@ -17,7 +17,7 @@ $article_loop = '<article class="post">
                     </span>
                 </h2>
             </div>
-            <div class="post-entry">[SHORT]</div>
+            <div class="mod_journal_article_entry">[SHORT]</div>
         </div>
         <div class="mod_journal_readmore" style="visibility:[SHOW_READ_MORE];"><a href="[LINK]">[READ_MORE]</a></div>
     </div>
@@ -32,14 +32,11 @@ $footer = '</div>
 </tr>
 </table>';
 $article_header = addslashes('<h2>[TITLE]</h2>
-<div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] | [MODIFIED] [MODI_DATE] [AT] [MODI_TIME] [O_CLOCK]</div>');
+<div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [ARTICLE_DATE] [AT] [ARTICLE_TIME] [O_CLOCK] | [LAST_MODIFIED_BY] [MODI_BY] [ON] [MODI_DATE] [AT] [MODI_TIME] [O_CLOCK]</div>');
 $article_content = '<div class="mod_journal_content_short">
   [CONTENT_SHORT]
 </div>
 <div class="mod_journal_content_long">[CONTENT_LONG]</div>
-<div class="fotorama" data-keyboard="true" data-navposition="top" data-nav="thumbs">
-[IMAGES]
-</div>
 ';
 $article_footer = ' <div class="mod_journal_spacer"></div>
 <table class="mod_journal_table" style="visibility: [DISPLAY_PREVIOUS_NEXT_LINKS]">

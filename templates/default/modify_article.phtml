@@ -139,7 +139,7 @@
                         </td>
                         <td>
                             <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $i ?>', x:1, y:1})">
-                                <img class="img_list" src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.$data['article_id'].'/'.JOURNAL_THUMBDIR.'/'.$image["picname"] ?>" />
+                                <img class="img_list" src="<?php echo $image["thumb_url"] ?>" />
                             </a>
                             <div id="tt<?php echo $i ?>" class="xbtooltip">
                                 <img src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.$data['article_id'] ?>/<?php echo $image["picname"] ?>" />

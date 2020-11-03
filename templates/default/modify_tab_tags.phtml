@@ -47,8 +47,8 @@
                         <td><span class="mod_journal_color" style="<?php if(strlen($tag['text_color'])>0): echo 'background-color:'.$tag['text_color'];endif ?>"></span></td>
                         <td style="width:20px">
 <?php if($tag['section_id']!=0 || $data['is_admin']): ?>
-                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/delete_tag.php?page_id=<?php echo $pageID; ?>&amp;section_id=<?php echo $sectionID; ?>&amp;tag_id=<?php echo $tag['tag_id']; ?>');" title="<?php echo self::t('Delete') ?>">
-                                <span class="fa fa-fw fa-close nwi-delete"></span>
+                            <a href="javascript: confirm_link('<?php echo self::t('Are you sure?') ?>', '<?php echo $data['edit_url']; ?>tab=s&amp;tag_id=<?php echo $tag['tag_id']; ?>&amp;delete=1');" title="<?php echo self::t('Delete') ?>">
+                                <span class="fa fa-fw fa-trash mod-journal-delete"></span>
                             </a>
 <?php endif; ?>
                         </td>

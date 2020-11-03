@@ -22,6 +22,7 @@
                                 <th><?php echo self::t('Group') ?></th>
                                 <th><?php echo self::t('Active') ?></th>
                                 <th><?php echo self::t('Tags') ?></th>
+                                <th><?php echo self::t('Images') ?></th>
                                 <th><?php echo self::t('Starting date') ?></th>
                                 <th><?php echo self::t('Expiry date') ?></th>
                                 <th></th>
@@ -63,10 +64,13 @@
                                     <?php echo $article['tags'] ?>
                                 </td>
                                 <td>
-                                    <?php echo $article['publishing_date'] ?>
+                                    <?php echo count($article['images']) ?>
                                 </td>
                                 <td>
-                                    <?php echo $article['publishing_end_date'] ?>
+                                    <?php echo ($article['published_when']>0 ? cmsbridge::formatDate($article['published_when']) : '') ?>
+                                </td>
+                                <td>
+                                    <?php echo ($article['published_until']>0 ? cmsbridge::formatDate($article['published_until']) : '') ?>
                                 </td>
                                 <td>
 <?php if ($article['is_visible'] == true): ?>
@@ -142,38 +146,49 @@
                 var ICONS = '<?php echo CMSBRIDGE_CMS_URL."/modules/journal/images" ?>';
             </script>
 
-<?php if ($data['importable_sections']>0): ?>
+<?php if (count($data['importable_sections'])>0): ?>
             <h2><?php echo self::t('Import section') ?></h2>
-            <form name="import" action="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/import.php" method="post" enctype="multipart/form-data">
-                <?php echo \CAT\Addon\junction::admin()->getFTAN(); ?>
+            <form name="import_<?php echo $sectionID; ?>" action="<?php echo $data['edit_url'] ?>" method="post" enctype="multipart/form-data">
+                <?php echo \CAT\Addon\cmsbridge::admin()->getFTAN(); ?>
                 <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
                 <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
+                <input type="hidden" name="import" value="1" />
                 <table class="table table-sm">
                 <tr>
-                    <td class="setting_name"><?php echo self::t('Import') ?>:</td>
+                    <td class="setting_name"><?php echo self::t('Section') ?>:</td>
                     <td class="setting_value">
                         <select name="source_id">
-<?php if(isset($nwi_sections) && is_array($nwi_sections) && count($nwi_sections)>0): ?>
-                            <option disabled value="0">[--- News with Images ---]</option>
-<?php foreach($nwi_sections as $source): if($source['section_id'] != $sectionID): ?>
-                            <option value="<?php echo $source['section_id'] ?>"><?php echo self::t('Section').' '.$source['section_id'] ?></option>
-<?php endif; endforeach; ?>
-<?php endif; if(isset($news_sections) && is_array($news_sections) && count($news_sections)>0): ?>
-                            <option disabled value="0">[--- (classical) News ---]</option>
-                            <?php foreach($news_sections as $source): ?>
-                            <option value="<?php echo $source['section_id'] ?>"><?php echo self::t('Section').' '.$source['section_id'] ?></option>
-                            <?php endforeach; ?>
-<?php endif; if(isset($topics_sections) && is_array($topics_sections) && count($topics_sections)>0): foreach($topics_sections as $name => $topics ): if(count($topics)>0): ?>
-                            <option disabled value="0">[--- <?php echo $name ?> ---]</option>
-<?php foreach($topics as $source): ?>
-                            <option value="<?php echo $source['section_id'] ?>"><?php echo self::t('Section').' '.$source['section_id'] ?></option>
-<?php endforeach; endif; endforeach; endif; ?>
+<?php foreach($data['importable_sections'] as $module => $sections): ?>
+                            <option disabled value="0">[--- <?php echo self::t('Module').': '.$module ?> ---]</option>
+<?php foreach($sections as $id => $name): ?>
+                            <option value="<?php echo $id ?>"><?php echo self::t('Section').' #'.$name ?></option>
+<?php endforeach; endforeach; ?>
                         </select>
                     </td>
                 </tr>
+<?php if(!count($data['articles'])>0): ?>
+                <tr>
+                    <td class="setting_name"><?php echo self::t('Include settings') ?>:</td>
+                    <td class="setting_value">
+                        <input type="checkbox" name="include_settings" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="setting_name"><?php echo self::t('Include groups') ?>:</td>
+                    <td class="setting_value">
+                        <input type="checkbox" name="include_groups" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="setting_name"><?php echo self::t('Include tags') ?>:</td>
+                    <td class="setting_value">
+                        <input type="checkbox" name="include_tags" />
+                    </td>
+                </tr>
+<?php endif; ?>
                 <tr>
                     <td align="left">
-                        <input name="save" type="submit" value="<?php echo self::t('Save') ?>" />
+                        <input name="save" type="submit" value="<?php echo self::t('Import') ?>" />
                     </td>
                     <td>
                     </td>

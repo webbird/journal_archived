@@ -1,6 +1,7 @@
 @import url(js/spectrum.css);
 @import url(css/fontawesome.min.css);
 
+@import '_colors.scss';
 @import '_tables.scss';
 @import '_forms.scss';
 @import '_images.scss';
@@ -8,6 +9,7 @@
 @import '_switch.scss';
 @import '_tabs.scss';
 
+.mod_journal .mod-journal-delete{color:$red;}
 .mod_journal .mod_journal_tag {padding:0.2em 0;}
 .mod_journal .mod_journal_taglist {border:1px solid #ececec;max-height:100px;overflow-y:scroll;}
 

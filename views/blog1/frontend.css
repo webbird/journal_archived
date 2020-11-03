@@ -3,15 +3,21 @@
 .mod_journal .mod_journal_blog1_wrapper {
     position: relative;
     display: flex;
+    flex-flow: row wrap;
+    width: 100%;
 }
 .mod_journal .mod_journal_blog1_wrapper article {
     position: relative;
 }
-.mod_journal .mod_journal_blog1_wrapper .post {
-    margin-bottom: 60px;
+.mod_journal .mod_journal_blog1_wrapper:nth-child(3n){
+    page-break-after: always; /* CSS 2.1 syntax */
+    break-after: always; /* New syntax */
+}
+.mod_journal .mod_journal_blog1_wrapper article.article {
     width: 31%;
     float: left;
     margin-right: 26px;
+    margin-bottom: 26px;
     border: 1px solid #ccc;
     min-height: 26em;
 }
@@ -23,30 +29,33 @@
 .mod_journal article {
     display: block;
 }
-.mod_journal .post-image {
+.mod_journal .mod_journal_article_image {
     margin-bottom: 18px;
 }
-.mod_journal .post-image img {
+.mod_journal .mod_journal_article_image img {
     max-width: 100%;
-    height: auto;
     min-width: 100%;
+    max-height: 220px;
+    min-height: 220px;
+    object-fit: cover;
 }
-.mod_journal .post-image a img {
+.mod_journal .mod_journal_article_image a img {
     border: none;
 }
-.mod_journal .post-bind {
+.mod_journal .mod_journal_article_bind {
     position: relative;
     top: -52px;
     background: #fff;
     width: 95%;
-    margin: 0 auto -40px auto;
+    margin-left: auto;
+    margin-right: auto;
 }
-.mod_journal .post-header {
+.mod_journal .mod_journal_article_header {
     margin-bottom: 10px;
     padding-bottom: 15px;
     padding: 0 20px;
 }
-.mod_journal .post-tag {
+.mod_journal .mod_journal_article_tag {
     position: relative;
     top: -10px;
     min-width: 20%;
@@ -54,10 +63,10 @@
     display: inline-block;
     padding: 0 5px;
 }
-.mod_journal .post-tag a:first-child {
+.mod_journal .mod_journal_article_tag a:first-child {
     display: inline-block;
 }
-.mod_journal .post-tag a {
+.mod_journal .mod_journal_article_tag a {
     display: inline-block;
     line-height: 1.2em;
     letter-spacing: 0px;
@@ -69,12 +78,13 @@
     font-style: italic;
     padding: .5em .8em;
 }
-.mod_journal article.post > div {
+.mod_journal article.article > div {
     min-height:100%;
+        background-color: #fff;
 }
-.mod_journal .post-entry {
+.mod_journal .mod_journal_article_entry {
 }
-.mod_journal .post-footer {
+.mod_journal .mod_journal_article_footer {
 }
 .mod_journal .meta-date {
     font-weight: 400;
@@ -84,7 +94,7 @@
     text-decoration: none;
     text-transform: uppercase;
 }
-.mod_journal .post-header h1 a, .mod_journal .post-header h2 a, .mod_journal .post-header h1 {
+.mod_journal .mod_journal_article_header h1 a, .mod_journal .mod_journal_article_header h2 a, .mod_journal .mod_journal_article_header h1 {
     font: 21px poppins;
     color: #000;
     -o-transition: .3s;

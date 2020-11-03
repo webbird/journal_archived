@@ -76,19 +76,13 @@
             echo registerEditArea ('header_'.$sectionID,'html',false,'both',true,true,600,100);
             echo registerEditArea ('article_loop_'.$sectionID,'html',false,'both',true,true,600,200);
             echo registerEditArea ('footer_'.$sectionID,'html',false,'both',true,true,600,100);
+            echo registerEditArea ('article_header_'.$sectionID,'html',false,'both',true,true,600,100);
+            echo registerEditArea ('article_content_'.$sectionID,'html',false,'both',true,true,600,200);
+            echo registerEditArea ('article_footer_'.$sectionID,'html',false,'both',true,true,600,100);
+            echo registerEditArea ('tag_loop_'.$sectionID,'html',false,'both',true,true,600,100);
+            echo registerEditArea ('image_loop_'.$sectionID,'html',false,'both',true,true,600,200);
         }
         if(CMSBRIDGE_CMS_BC2) {
-/*
-            string $id,
-            string $syntax           = 'php',
-        	int    $min_width        = 600,
-        	int    $min_height       = 300,
-        	string $toolbar          = '',
-        	bool   $syntax_selection = true,
-        	string $allow_resize     = 'both',
-        	bool   $allow_toggle     = true,
-        	bool   $start_highlight  = true
-*/
             require_once CMSBRIDGE_CMS_PATH.'/'.CAT_MODULES_FOLDER.'/lib_editarea/inc/class.editarea.php';
             \CAT\Addon\editarea::showEditArea('header_'.$sectionID,'html',600,100);
             \CAT\Addon\editarea::showEditArea('article_loop_'.$sectionID,'html',600,200);

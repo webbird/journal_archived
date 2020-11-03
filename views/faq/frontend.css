@@ -15,8 +15,9 @@
 
 /*** list page ***/
 .mod_journal_faq .mod_journal_teaserpic{float:left;margin-right:15px;}
-.mod_journal_faq .mod_journal_teaserpic img{border:25px solid transparent; border-radius:50%;}
-
+.mod_journal_faq .mod_journal_teaserpic img{height:10em;width:10em;object-fit:cover;}
+.mod_journal_faq .mod_journal_teaserpic.rounded img{border-radius:50%;}
+.mod_journal_faq .mod_journal_teaserpic.oval img{border-radius:50%;height:8em;}
 
 .mod_journal_faq .mod_journal_metadata{font-size:75%;font-style:italic;}
 

@@ -96,6 +96,8 @@ div.mod_journal div.tabs nav li.active a { background: rgba(255, 255, 255, 0.05)
 
 .mod_journal #subtab1:checked ~ #sub-tab-content1, .mod_journal #subtab2:checked ~ #sub-tab-content2 { display: block; }
 
+.mod_journal .mod-journal-delete { color: #c00; }
+
 .mod_journal .mod_journal_tag { padding: 0.2em 0; }
 
 .mod_journal .mod_journal_taglist { border: 1px solid #ececec; max-height: 100px; overflow-y: scroll; }

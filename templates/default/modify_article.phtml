@@ -28,6 +28,9 @@
                     <td class="setting_name"><?php echo self::t('Group'); ?>:</td>
                     <td class="setting_value">
 <?php include __DIR__.'/group_select.phtml'; ?>
+                        <div class="alert alert-info">
+                         <?php echo self::t('Please note: Selecting a group on another page will move the post to that page!') ?>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -47,7 +50,7 @@
                 <tr>
                 	<td class="setting_name"><?php echo self::t('Starting date'); ?>:</td>
                 	<td class="setting_value">
-                	    <input type="text" id="publishdate" name="publishdate" data-field="datetime" value="<?php echo $data['publishing_date']; ?>" style="width:33%;"<?php if(isset(self::$highlighted['publishdate'])): ?> class="border-danger"<?php endif; ?> />
+                	    <input type="text" id="publishdate" name="publishdate" data-field="datetime" value="<?php echo ($data['published_when']>0 ? \CAT\Addon\cmsbridge::formatDate($data['published_when']) : '') ?>" style="width:33%;"<?php if(isset(self::$highlighted['publishdate'])): ?> class="border-danger"<?php endif; ?> />
                         <i class="far fa-calendar" id="publishdate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
                     	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
                         <div id="dtBox_<?php echo $sectionID ?>_1"></div>
@@ -56,7 +59,7 @@
                 <tr>
                 	<td class="setting_name"><?php echo self::t('Expiry date'); ?>:</td>
                 	<td class="setting_value">
-                	    <input type="text" id="enddate" name="enddate" data-field="datetime" value="<?php echo $data['publishing_end_date'] ; ?>" style="width:33%;"<?php if(isset(self::$highlighted['enddate'])): ?> class="border-danger"<?php endif; ?> />
+                	    <input type="text" id="enddate" name="enddate" data-field="datetime" value="<?php echo ($data['published_until']>0 ? \CAT\Addon\cmsbridge::formatDate($data['published_until']) : '') ?>" style="width:33%;"<?php if(isset(self::$highlighted['enddate'])): ?> class="border-danger"<?php endif; ?> />
                     	<i class="far fa-calendar" id="enddate_trigger" style="cursor: pointer;" title="<?php echo self::t('Calendar'); ?>"></i>
                     	<i class="far fa-calendar-times" style="cursor: pointer;" title="<?php echo self::t('Delete date'); ?>"></i>
                         <div id="dtBox_<?php echo $sectionID ?>_2"></div>
@@ -128,29 +131,29 @@
                 </thead>
                 <tbody>
 <?php foreach($data['images'] as $i => $image): ?>
-                    <tr id="img_id:<?php echo $image['id'] ?>">
+                    <tr id="img_id:<?php echo $image['pic_id'] ?>">
         	            <td class="dragdrop_item">&nbsp;</td>
                         <td>
 <i class="fa fa-fw<?php if($i>0 && count($data['images'])>1 && $i <= count($data['images'])): ?> fa-angle-up<?php endif; ?>"></i>
 <i class="fa fa-fw<?php if($i==0 && count($data['images'])>1): ?> fa-angle-down<?php endif; ?>"></i>
                         </td>
                         <td>
-                            <input title="<?php echo self::t('Show this image on the articles listing page') ?>" type="radio" name="preview[<?php echo $image['id'] ?>]" id="preview[<?php echo $image['id'] ?>]" value="<?php echo $image['id'] ?>"<?php if($image['preview']=='Y'): ?> checked="checked"<?php endif; ?> />
+                            <input title="<?php echo self::t('Show this image on the articles listing page') ?>" type="radio" name="preview[<?php echo $image['pic_id'] ?>]" id="preview[<?php echo $image['pic_id'] ?>]" value="<?php echo $image['pic_id'] ?>"<?php if($image['preview']=='Y'): ?> checked="checked"<?php endif; ?> />
                         </td>
                         <td>
                             <a href="javascript:void(0);" onmouseover="XBT(this, {id:'tt<?php echo $i ?>', x:1, y:1})">
                                 <img class="img_list" src="<?php echo $image["thumb_url"] ?>" />
                             </a>
                             <div id="tt<?php echo $i ?>" class="xbtooltip">
-                                <img src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.$data['article_id'] ?>/<?php echo $image["picname"] ?>" />
+                                <img src="<?php echo CMSBRIDGE_CMS_URL.'/'.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR.'/'.self::$sectionID ?>/<?php echo $image["picname"] ?>" />
                             </div><br />
                             <?php echo $image["picname"] ?>
                         </td>
                         <td>
-                            <input type="text" name="picdesc[<?php echo $image['id'] ?>]" value="<?php echo htmlspecialchars($image["picdesc"]) ?>">
+                            <input type="text" name="picdesc[<?php echo $image['pic_id'] ?>]" value="<?php echo htmlspecialchars($image["picdesc"]) ?>">
                         </td>
                         <td>
-                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&img_id=<?php echo $image['id'] ?>#fs">
+                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&img_id=<?php echo $image['pic_id'] ?>#fs">
                                 <i class="fa fa-fw fa-trash text-danger"></i>
                             </a>
                         </td>

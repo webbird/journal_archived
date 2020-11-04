@@ -1,5 +1,5 @@
                     <select name="group">
-                        <option value="<?php echo urlencode(serialize(array('g'=>'','s'=>$sectionID,'p'=>$pageID))); ?>">
+                        <option value="<?php echo $sectionID.'_0'; ?>">
                             <?php echo self::t('none')." (".self::t('Section')." #".$sectionID ?>)
                         </option>
 <?php
@@ -8,20 +8,17 @@
             if($pID != $pageID):
                         // separator (next page)
 ?>
-                        <option disabled="disabled">----- <?php echo self::t('Page'), " ", $pages[$pID], " (", $pID, ")" ?> -----</option>
+                        <option disabled="disabled">----- <?php echo self::t('Page'), " &quot;", $data['pages'][$pID], "&quot; (", $pID, ")" ?> -----</option>
 <?php
             endif;
             foreach($sects as $section_id => $grps):
                 if($sectionID != $section_id):
-                    $id = urlencode(serialize(array('g'=>'','s'=>$section_id,'p'=> $pageID)));
 ?>
-                        <option value="<?php echo $id ?>"><?php echo self::t('none')." (".self::t('Section')." #".$section_id ?>)</option>
+                        <option value="<?php echo $sectionID.'_0'; ?>"><?php echo self::t('none')." (".self::t('Section')." #".$section_id ?>)</option>
 <?php
                 endif;
                 foreach($grps as $group):
-                    $id = urlencode(serialize(array('g' => intval($group['group_id']), 's' => $section_id, 'p' => $pageID)));
-
 ?>
-                        <option value="<?php echo $id ?>"<?php if ($data['group_id'] == $group['group_id']): ?> selected="selected"<?php endif; ?>><?php echo $group['title'].' ('.self::t('Section').' #'.$section_id ?>)</option>
+                        <option value="<?php echo $section_id.'_'.$group['group_id'] ?>"<?php if ($data['group_id'] == $group['group_id']): ?> selected="selected"<?php endif; ?>><?php echo $group['title'].' ('.self::t('Section').' #'.$section_id ?>)</option>
 <?php endforeach; endforeach; endforeach; endif; ?>
                     </select>

@@ -110,6 +110,7 @@ $JOURNAL_LANG = array(
     'Order by' => 'Sortierung',
     'Overview page settings' => '&Uuml;bersichtsseite',
     'Please note' => 'Bitte beachten',
+    'Please note: Selecting a group on another page will move the post to that page!' => 'Bitte beachten: Durch Auswählen einer Gruppe auf einer anderen Seite wird der Beitrag dorthin verschoben!',
     'Posted by' => 'Verfasst von',
     'Presentation / View' => 'Vorlage / Sicht',
     'Preset already exists' => 'Es existiert bereits eine Vorlage/View mit diesem Namen',

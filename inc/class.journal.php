@@ -646,10 +646,10 @@ require_once WB_PATH."/index.php";
                     $img_base_path = CMSBRIDGE_CMS_PATH.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
                     $img_base_url  = CMSBRIDGE_CMS_URL.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
                     foreach($images as $i => $image) {
-                        $images[$i]['img_url'] = $img_base_url.'/'.$articleID.'/'.$image["picname"];
+                        $images[$i]['img_url'] = $img_base_url.'/'.self::$sectionID.'/'.$image["picname"];
                         $images[$i]['thumb_url'] = (
-                              file_exists($img_base_path.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"])
-                            ? $img_base_url.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"]
+                              file_exists($img_base_path.'/'.self::$sectionID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"])
+                            ? $img_base_url.'/'.self::$sectionID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"]
                             : $images[$i]['img_url']
                         );
                     }
@@ -1169,9 +1169,10 @@ require_once WB_PATH."/index.php";
                 }
             }
 
+            // get article data
             $article_data = self::getArticle($articleID);
             $article_data['linkbase'] = '';
-            # in BC2, the linkbase is always the current page
+            // in BC2, the linkbase is always the current page
             if(!CMSBRIDGE_CMS_BC2) {
                 $link  = $article_data['link'];
                 $parts = explode('/', $link);
@@ -1337,38 +1338,23 @@ require_once WB_PATH."/index.php";
         protected static function getAllGroups()
         {
             $groups = array();
-            $pages = array();
+            $pages = cmsbridge::getPages();
 
             // get groups for this section
             $groups[self::$pageID] = array();
             $groups[self::$pageID][self::$sectionID] = self::getGroups();
 
-            // get all other NWI sections
-/*
-            $sections = mod_nwi_sections();
-            foreach($sections as $sect) {
-                if($sect['section_id'] != $section_id) { // skip current
-                    $groups[$sect['page_id']] = array();
-                    // groups
-                    $groups[$sect['page_id']][$sect['section_id']] = mod_nwi_get_groups(intval($sect['section_id']));
-                    // get page details for the dropdown
-                    $pid = intval($sect['page_id']);
-                    $page_title = "";
-                    $page_details = "";
-                    if ($pid != 0) { // find out the page title and print separator line
-                        $page_details = $admin->get_page_details($pid);
-                        if (!empty($page_details)) {
-                            $page_title = isset($page_details['page_title'])
-                                        ? $page_details['page_title']
-                                        : ( isset($page_details['menu_title'])
-                                            ? $page_details['menu_title']
-                                            : "" );
+            // get groups from any other journal section
+            $sections = self::getImportableSections('journal');
+            if(is_array($sections) && count($sections)>0 && isset($sections['journal'])) {
+                foreach($sections['journal'] as $sectID => $name) {
+                    if($sectID != self::$sectionID) { // skip current
+                        $pageID = cmsbridge::getPageForSection(intval($sectID));
+                        $groups[$pageID][$sectID] = self::getGroups(intval($sectID));
                         }
-                        $pages[$pid] = $page_title;
                     }
                 }
-            }
-*/
+
             return array($groups,$pages);
         }   // end function mod_nwi_get_all_groups()
 
@@ -1556,15 +1542,20 @@ require_once WB_PATH."/index.php";
          * @access protected
          * @return
          **/
-        protected static function getImportableSections()
+        protected static function getImportableSections(?string $type=null)
         {
             $sections = array();
             $fields = '`section_id`';
             if(CMSBRIDGE_CMS_WBCE) {
                 $fields .= ', `namesection` AS `section_name`';
             }
+            if(empty($type)) {
+                $types = array('journal','topics');
+            } else {
+                $types = array($type);
+            }
 # !!!!! TODO: Ueber die vorhandenen Importer ermitteln !!!!!!!!!!!!!!!!!!!!!!!!!
-            foreach(array('journal','topics') as $module) {
+            foreach($types as $module) {
                 $stmt = cmsbridge::db()->query(sprintf(
                     "SELECT %s FROM `%ssections`" .
                     " WHERE `module`='%s' AND `section_id`!=%d " .

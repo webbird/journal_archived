@@ -425,6 +425,26 @@ require_once WB_PATH."/index.php";
         }   // end function createAccessFile()
 
         /**
+         * if file exists, find new name by adding a number
+         *
+         * @access protected
+         * @param  string    $dir
+         * @param  string    $filename
+         * @return string
+         **/
+        public static function findFreeFilename(string $dir, string $filename) : string
+        {
+            $num = 1;
+            while(file_exists($dir.'/'.$filename)) {
+                $f_name = pathinfo($dir.'/'.$filename, PATHINFO_FILENAME);
+                $suffix = pathinfo($dir.'/'.$filename, PATHINFO_EXTENSION);
+                $filename = $f_name.'_'.$num.'.'.$suffix;
+                $num++;
+            }
+            return $filename;
+        }   // end function findFreeFilename()
+
+        /**
          * get article details
          * public as needed by upload.php
          *
@@ -609,29 +629,32 @@ require_once WB_PATH."/index.php";
         public static function getImages(int $articleID)
         {
             $settings = self::getSettings();
-            $stmt = cmsbridge::db()->query(sprintf(
+            $sql = sprintf(
                 "SELECT * FROM `%s%s` t1 " .
                 "JOIN `%s%s` t2 ".
-                "ON t1.`id`=t2.`pic_id` ".
+                "ON t1.`pic_id`=t2.`pic_id` ".
                 "WHERE `t2`.`article_id`=%d " .
-                "ORDER BY `position`,`id` ASC",
+                "ORDER BY `position`,`t1`.`pic_id` ASC",
                 cmsbridge::dbprefix(), self::$tables['images'],
                 cmsbridge::dbprefix(), self::$tables['articles_img'],
                 intval($articleID)
-            ));
-            $images = $stmt->fetchAll();
-            if(is_array($images) && count($images)>0) {
-                $img_base_path = CMSBRIDGE_CMS_PATH.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
-                $img_base_url  = CMSBRIDGE_CMS_URL.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
-                foreach($images as $i => $image) {
-                    $images[$i]['img_url'] = $img_base_url.'/'.$articleID.'/'.$image["picname"];
-                    $images[$i]['thumb_url'] = (
-                          file_exists($img_base_path.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"])
-                        ? $img_base_url.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"]
-                        : $images[$i]['img_url']
-                    );
+            );
+            $stmt = cmsbridge::db()->query($sql);
+            if(is_object($stmt) && $stmt->rowCount()>0) {
+                $images = $stmt->fetchAll();
+                if(is_array($images) && count($images)>0) {
+                    $img_base_path = CMSBRIDGE_CMS_PATH.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
+                    $img_base_url  = CMSBRIDGE_CMS_URL.CMSBRIDGE_MEDIA.'/'.JOURNAL_IMAGE_SUBDIR;
+                    foreach($images as $i => $image) {
+                        $images[$i]['img_url'] = $img_base_url.'/'.$articleID.'/'.$image["picname"];
+                        $images[$i]['thumb_url'] = (
+                              file_exists($img_base_path.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"])
+                            ? $img_base_url.'/'.$articleID.'/'.JOURNAL_THUMBDIR.'/'.$image["picname"]
+                            : $images[$i]['img_url']
+                        );
+                    }
+                    return $images;
                 }
-                return $images;
             }
             return array();
         }   // end function getImages()
@@ -1302,26 +1325,6 @@ require_once WB_PATH."/index.php";
         }   // end function escapeTags()
 
         /**
-         * if file exists, find new name by adding a number
-         *
-         * @access protected
-         * @param  string    $dir
-         * @param  string    $filename
-         * @return string
-         **/
-        protected static function findFreeFilename(string $dir, string $filename) : string
-        {
-            $num = 1;
-            while(file_exists($dir.'/'.$filename)) {
-                $f_name = pathinfo($dir.'/'.$filename, PATHINFO_FILENAME);
-                $suffix = pathinfo($dir.'/'.$filename, PATHINFO_EXTENSION);
-                $filename = $f_name.'_'.$num.'.'.$suffix;
-                $num++;
-            }
-            return $filename;
-        }   // end function findFreeFilename()
-
-        /**
          * get groups for all NWI sections on all pages
          *
          * result array:
@@ -1560,7 +1563,8 @@ require_once WB_PATH."/index.php";
             if(CMSBRIDGE_CMS_WBCE) {
                 $fields .= ', `namesection` AS `section_name`';
             }
-            foreach(array('journal') as $module) {
+# !!!!! TODO: Ueber die vorhandenen Importer ermitteln !!!!!!!!!!!!!!!!!!!!!!!!!
+            foreach(array('journal','topics') as $module) {
                 $stmt = cmsbridge::db()->query(sprintf(
                     "SELECT %s FROM `%ssections`" .
                     " WHERE `module`='%s' AND `section_id`!=%d " .
@@ -2146,15 +2150,16 @@ echo "ERROR: ", $e->getMessage();
 
             // get assigned images
             $article['images'] = self::getImages($article['article_id'],false);
+
             // find configured preview image
             $prev_img_found = false;
             foreach($article['images'] as $img) {
                 if($img['preview']=='Y') {
-                    if(file_exists(JOURNAL_IMGDIR.'/'.$article['article_id'].'/'.$img['picname'])) {
-                        $article['preview_image'] = "<img src='".JOURNAL_IMGURL.'/'.$article['article_id'].'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                    if(file_exists(JOURNAL_IMGDIR.'/'.self::$sectionID.'/'.$img['picname'])) {
+                        $article['preview_image'] = "<img src='".JOURNAL_IMGURL.'/'.self::$sectionID.'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
                         $article['preview_image_thumb'] = $article['preview_image'];
-                        if(file_exists(JOURNAL_IMGDIR.'/'.$article['article_id'].'/'.JOURNAL_THUMBDIR.'/'.$img['picname'])) {
-                            $article['preview_image_thumb'] = "<img src='".JOURNAL_IMGURL.'/'.$article['article_id'].'/'.JOURNAL_THUMBDIR.'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                        if(file_exists(JOURNAL_IMGDIR.'/'.self::$sectionID.'/'.JOURNAL_THUMBDIR.'/'.$img['picname'])) {
+                            $article['preview_image_thumb'] = "<img src='".JOURNAL_IMGURL.'/'.self::$sectionID.'/'.JOURNAL_THUMBDIR.'/'.$img['picname']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
                         }
                         $prev_img_found = true;
                     }
@@ -2163,8 +2168,8 @@ echo "ERROR: ", $e->getMessage();
 
             // if no preview image was found, use the group image
             if($prev_img_found == false && isset($article['group_image'])) {
-                $article['preview_image_thumb'] = "<img src='".$group_map[$article['group_id']]['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
-                $article['preview_image'] =  "<img src='".$group_map[$article['group_id']]['image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                $article['preview_image_thumb'] = "<img src='".$article['group_image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
+                $article['preview_image'] =  "<img src='".$article['group_image']."' alt='".htmlspecialchars($article['title'], ENT_QUOTES | ENT_HTML401)."' />";
             }
 
             // article dates
@@ -2392,7 +2397,6 @@ echo "ERROR: ", $e->getMessage();
                     $article['article_link'] = '#" onclick="javascript:void(0);return false;" style="cursor:no-drop;';
                 }
 
-
                 // set replacements for current line
                 $replacements = array_merge(
                     $default_replacements,
@@ -2400,12 +2404,13 @@ echo "ERROR: ", $e->getMessage();
                     array(
                         'PREVIEW_IMAGE_THUMB'   => $article['preview_image_thumb'],
                         'PREVIEW_IMAGE'         => $article['preview_image'],
-                        'SHORT'           => $article['content_short'],
-                        'LINK'            => $article['article_link'],
-                        'ARTICLE_DATE'    => $article['article_date'],
-                        'ARTICLE_TIME'    => $article['article_time'],
-                        'SHOW_READ_MORE'  => (strlen($article['content_long'])<1 && ($img_count<1))
-                                             ? 'hidden' : 'visible',
+                        'SHORT'                 => $article['content_short'],
+                        'LINK'                  => $article['article_link'],
+                        'ARTICLE_DATE'          => $article['article_date'],
+                        'ARTICLE_TIME'          => $article['article_time'],
+                        'SHOW_READ_MORE'        => (strlen($article['content_long'])<1 && ($img_count<1))
+                                                ? 'hidden' : 'visible',
+                        'NUMBER'                => $i,
 // !!!!! TODO: handle offsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         'DISPLAY_PREVIOUS_NEXT_LINKS'
                                           => 'hidden',
@@ -2738,7 +2743,7 @@ echo "ERROR: ", $e->getMessage();
                              ? cmsbridge::escapeString(strip_tags($_POST['picdesc'][$row_id]))
                              : '';
                     cmsbridge::db()->query(sprintf(
-                        "UPDATE `%s%s` SET `picdesc`='%s' WHERE id=%d",
+                        "UPDATE `%s%s` SET `picdesc`='%s' WHERE `pic_id`=%d",
                         cmsbridge::dbprefix(), self::$tables['images'], $picdesc, $row_id
                     ));
                 }

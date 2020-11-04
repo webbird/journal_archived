@@ -88,4 +88,17 @@
             $("form[name='modify']").submit();
         }
     });
+
+    /* import from other section */
+    if($("form[name='importsection']").length) {
+        $("select[name='source_id']").on("change", function(e) {
+            let select = $(e.target)[0];
+            let type = $("#"+$(select).attr("id")+" option:selected").data("module");
+            if(type != "news_img" && type != "journal") {
+                $(select).parentsUntil("form").find("tr.importgroups").hide();
+            } else {
+                $(select).parentsUntil("form").find("tr.importgroups").show();
+            }
+        });
+    }
 })(jQuery);

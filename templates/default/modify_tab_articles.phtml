@@ -67,10 +67,10 @@
                                     <?php echo count($article['images']) ?>
                                 </td>
                                 <td>
-                                    <?php echo ($article['published_when']>0 ? cmsbridge::formatDate($article['published_when']) : '') ?>
+                                    <?php echo ($article['published_when']>0 ? \CAT\Addon\cmsbridge::formatDate($article['published_when']) : '') ?>
                                 </td>
                                 <td>
-                                    <?php echo ($article['published_until']>0 ? cmsbridge::formatDate($article['published_until']) : '') ?>
+                                    <?php echo ($article['published_until']>0 ? \CAT\Addon\cmsbridge::formatDate($article['published_until']) : '') ?>
                                 </td>
                                 <td>
 <?php if ($article['is_visible'] == true): ?>
@@ -148,7 +148,7 @@
 
 <?php if (count($data['importable_sections'])>0): ?>
             <h2><?php echo self::t('Import section') ?></h2>
-            <form name="import_<?php echo $sectionID; ?>" action="<?php echo $data['edit_url'] ?>" method="post" enctype="multipart/form-data">
+            <form name="importsection" id="import_<?php echo $sectionID; ?>" action="<?php echo $data['edit_url'] ?>" method="post" enctype="multipart/form-data">
                 <?php echo \CAT\Addon\cmsbridge::admin()->getFTAN(); ?>
                 <input type="hidden" name="section_id" value="<?php echo $sectionID; ?>" />
                 <input type="hidden" name="page_id" value="<?php echo $pageID; ?>" />
@@ -157,11 +157,11 @@
                 <tr>
                     <td class="setting_name"><?php echo self::t('Section') ?>:</td>
                     <td class="setting_value">
-                        <select name="source_id">
+                        <select name="source_id" id="source_id_<?php echo $sectionID; ?>">
 <?php foreach($data['importable_sections'] as $module => $sections): ?>
                             <option disabled value="0">[--- <?php echo self::t('Module').': '.$module ?> ---]</option>
 <?php foreach($sections as $id => $name): ?>
-                            <option value="<?php echo $id ?>"><?php echo self::t('Section').' #'.$name ?></option>
+                            <option data-module="<?php echo $module ?>" value="<?php echo $id ?>"><?php echo self::t('Section').' #'.$name ?></option>
 <?php endforeach; endforeach; ?>
                         </select>
                     </td>
@@ -173,19 +173,19 @@
                         <input type="checkbox" name="include_settings" />
                     </td>
                 </tr>
-                <tr>
+<?php endif; ?>
+                <tr class="importgroups">
                     <td class="setting_name"><?php echo self::t('Include groups') ?>:</td>
                     <td class="setting_value">
                         <input type="checkbox" name="include_groups" />
                     </td>
                 </tr>
-                <tr>
+                <tr class="importtags">
                     <td class="setting_name"><?php echo self::t('Include tags') ?>:</td>
                     <td class="setting_value">
                         <input type="checkbox" name="include_tags" />
                     </td>
                 </tr>
-<?php endif; ?>
                 <tr>
                     <td align="left">
                         <input name="save" type="submit" value="<?php echo self::t('Import') ?>" />

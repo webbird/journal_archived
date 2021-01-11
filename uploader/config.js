@@ -1,4 +1,4 @@
-jQuery.noConflict();
+//jQuery.noConflict();
 (function($) {
   /*
    * For the sake keeping the code clean and the examples simple this file

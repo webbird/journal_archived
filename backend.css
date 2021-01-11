@@ -1,7 +1,7 @@
 @import url(js/spectrum.css);
-@import url(css/fontawesome.min.css);
+@import url(css/fa/fontawesome.min.css);
 /* ===== tables ===== */
-.mod_journal.wbce table.table { width: 100%; }
+.mod_journal table.table { width: 100%; border-radius: 5px; }
 
 .mod_journal.wbce table.table th, .mod_journal.wbce table.table td { padding: 2px 5px; text-align: left; }
 
@@ -14,6 +14,8 @@
 .mod_journal table.table th { background-color: #ccc; color: #000; padding: 5px; }
 
 /* ===== forms ===== */
+.mod_journal form > table { background-color: #fff; }
+
 .mod_journal.wbce input[type="submit"], .mod_journal.wbce input[type="button"] { min-width: 150px; padding: 5px; margin-top: 5px; }
 
 .mod_journal.wbce a.btn { display: inline-block; min-width: 150px; background-color: #ccc; text-align: center; text-decoration: none; }
@@ -42,10 +44,10 @@ div.card-content .form-control { display: inline; }
 
 /* ===== SWITCH ===== */
 /* The switch - the box around the slider */
-.switch { position: relative; display: inline-block; width: 30px; height: 17px; }
+.mod_journal_switch { position: relative; display: inline-block; width: 30px; height: 17px; }
 
 /* Hide default HTML checkbox */
-.switch input { opacity: 0; width: 0; height: 0; }
+.mod_journal_switch input { opacity: 0; width: 0; height: 0; min-height: inherit; }
 
 /* The slider */
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
@@ -78,7 +80,7 @@ div.mod_journal div.tabs nav li { float: left; margin-left: 0; }
 
 div.mod_journal div.tabs nav a { display: block; padding: 0 20px; line-height: 36px; color: #ddd; text-decoration: none; text-shadow: 0 -1px #2e3131; border-left: 1px solid #4d5354; border-left: 1px solid rgba(255, 255, 255, 0.06); border-right: 1px solid #353939; border-right: 1px solid rgba(0, 0, 0, 0.2); cursor: pointer; }
 
-div.mod_journal div.tabs nav a:hover { background: #4d5354; background: rgba(255, 255, 255, 0.05); }
+div.mod_journal div.tabs nav a:hover { background: #4d5354; background: rgba(255, 255, 255, 0.5); }
 
 div.mod_journal div.tabs nav li a, div.mod_journal div.tabs nav a:active { padding: 0 21px; line-height: 33px; color: #eee; background: #323637; border-left: 0; border-right: 0; border-bottom: 3px solid #48a9c0; background-image: linear-gradient(to bottom, #484e4f, #323637); box-shadow: inset 0 -1px #151717, inset 0 -1px 8px rgba(0, 0, 0, 0.2); }
 
@@ -94,8 +96,76 @@ div.mod_journal div.tabs nav li a:hover { border-bottom-color: #fff; }
 
 div.mod_journal div.tabs nav li.active a { background: rgba(255, 255, 255, 0.05); }
 
-.mod_journal #subtab1:checked ~ #sub-tab-content1, .mod_journal #subtab2:checked ~ #sub-tab-content2 { display: block; }
+/**/
+/* sub / inner tabs */
+/**/
+div.innertabs { margin: 0; padding: 0; border: 0; outline: none; font-size: 0; text-align: left; }
 
+div.innertabs > input[type="radio"] { position: absolute; left: -9999px; }
+
+div.innertabs > label { position: relative; display: inline-block; margin: 0; padding: 0; border: 0; outline: none; cursor: pointer; transition: all 0.1s; }
+
+div.innertabs > input:checked + label { cursor: default; }
+
+div.innertabs > .tab-content-first:checked ~ ul .tab-content-first, div.innertabs > .tab-content-2:checked ~ ul .tab-content-2, div.innertabs > .tab-content-3:checked ~ ul .tab-content-3, div.innertabs > .tab-content-4:checked ~ ul .tab-content-4, div.innertabs > .tab-content-5:checked ~ ul .tab-content-5, div.innertabs > .tab-content-6:checked ~ ul .tab-content-6, div.innertabs > .tab-content-7:checked ~ ul .tab-content-7, div.innertabs > .tab-content-8:checked ~ ul .tab-content-8, div.innertabs > .tab-content-9:checked ~ ul .tab-content-9, div.innertabs > .tab-content-last:checked ~ ul .tab-content-last { z-index: 1; top: 0; left: 0; opacity: 1; transform: scale(1, 1); transform: rotate(0deg); }
+
+div.innertabs > ul { list-style: none; position: relative; display: block; overflow: hidden; margin: 0; padding: 0; border: 0; outline: none; font-size: 1rem; text-align: left; background-color: #fff; }
+
+div.innertabs > ul > li { position: absolute; width: 100%; overflow: auto; padding: 30px 40px 40px; box-sizing: border-box; opacity: 0; transition: all 0.5s; }
+
+/**/
+/* default */
+/**/
+div.innertabs > label { padding: 0 20px; background: #e5e5e5; font-size: 13px; line-height: 49px; }
+
+div.innertabs > label:hover { background: #f2f2f2; }
+
+div.innertabs > input:checked + label { background: #fff; }
+
+div.innertabs-theme-1 > label { margin: 0 5px 5px 0; border-radius: 5px; background: #fff; box-shadow: 1px 2px rgba(0, 0, 0, 0.2); color: #808080; opacity: 0.8; }
+
+div.innertabs-theme-1 > label:hover { background: #fff; opacity: 1; }
+
+div.innertabs-theme-1 > input:checked + label { margin-bottom: 0; color: #2b82d9; box-shadow: 1px 2px rgba(43, 130, 217, 0.5); opacity: 1; }
+
+div.innertabs-theme-1 > ul { border-radius: 5px; box-shadow: 0 3px rgba(0, 0, 0, 0.2); }
+
+div.innertabs-theme-1 > .tab-content-first:checked ~ ul { border-top-left-radius: 0; }
+
+@media screen and (max-width: 767px) { div.innertabs-theme-1 > label { margin-right: 0; }
+  div.innertabs-theme-1 > input:checked + label { margin-bottom: 5px; padding-bottom: 0; border-radius: 5px; }
+  div.innertabs-theme-1 > .tab-content-first:checked ~ ul { border-top-left-radius: 5px; } }
+/**/
+/* animation effects */
+/**/
+div.innertabs-effect-scale > ul > li { -webkit-transform: scale(0.1, 0.1); }
+
+div.innertabs-effect-rotate > ul > li { -webkit-transform: rotate(180deg); }
+
+div.innertabs-effect-slide-top > ul > li { top: -40px; }
+
+div.innertabs-effect-slide-right > ul > li { left: 80px; }
+
+div.innertabs-effect-slide-bottom > ul > li { top: 40px; }
+
+div.innertabs-effect-slide-left > ul > li { left: -80px; }
+
+/**/
+/* height */
+/**/
+div.innertabs > ul, div.innertabs > ul > li { height: 370px; }
+
+/*----------------------------------------------------------------------------*/
+/*                               RESPONSIVENESS                               */
+/*----------------------------------------------------------------------------*/
+/**/
+/* pad */
+/**/
+/**/
+/* phone */
+/**/
+@media screen and (max-width: 767px) { div.innertabs > label { display: block; }
+  div.innertabs > .right { float: none; } }
 .mod_journal .mod-journal-delete { color: #c00; }
 
 .mod_journal .mod_journal_tag { padding: 0.2em 0; }
@@ -118,12 +188,12 @@ div.mod_journal.wbce div.alert { padding: 5px; border: 1px solid #ccc; border-ra
 div.mod_journal.wbce div.alert.alert-danger { background-color: #FFCCCC; }
 div.mod_journal.wbce div.alert.alert-info { background-color: #FFFFCC; }
 
-.mod_journal table.table th, .mod_journal table.table td.btnline { background: #464b4c; border-top: 1px solid #353939; border-bottom: 1px solid #2e3131; background-image: linear-gradient(to bottom, #464b4c, #3f4344); box-shadow: inset 0 -1px #151717, inset 0 -1px 8px rgba(0, 0, 0, 0.2); color: #fff; }
+.mod_journal table.table th, .mod_journal table.table td.btnline { background: #464b4c; border-top: 1px solid #353939; border-bottom: 1px solid #353939; background-image: linear-gradient(to bottom, #464b4c, #353939); color: #fff; }
 
-.mod_journal table.table th.l2 { background: transparent; color: #000; }
-
-.mod_journal.bc table.table th.l2 { color: #fff; }
+.mod_journal table.table th.l2 { background: transparent; color: #000; font-size: 1.2em; font-weight: 600; }
 
 .mod_journal.wbce tbody.ui-sortable td.dragdrop_handle.ui-sortable-handle i.fa.fas.fa-fw.fa-arrows-alt-v { display: none; }
+
+.mod_journal.wbce .btnline .btn.btn-primary { border: 2px solid transparent; border-image: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82); border-image-slice: 1; }
 
 /*# sourceMappingURL=backend.css.map */

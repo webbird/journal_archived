@@ -17,12 +17,8 @@ if(!defined('WB_PATH') && !defined('CAT_PATH')) { exit("Cannot access this file 
 
 require_once __DIR__.'/inc/class.journal.php';
 
-// WBCE
-if(is_object($wb)) {
-    $section = $wb->get_section_details($section_id);
-    \CAT\Addon\journal::initialize($section);
-    echo \CAT\Addon\journal::modify($section);
-} else {
-    echo "oh no!";
-    exit;
-}
+\CAT\Addon\cmsbridge::initialize(array());
+$section = \CAT\Addon\cmsbridge::getSection($section_id);
+
+\CAT\Addon\journal::initialize($section);
+echo \CAT\Addon\journal::modify($section);

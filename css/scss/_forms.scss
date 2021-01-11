@@ -1,4 +1,7 @@
 /* ===== forms ===== */
+.mod_journal form > table{
+    background-color: #fff;
+}
 .mod_journal.wbce input[type="submit"],.mod_journal.wbce input[type="button"]{min-width:150px;padding:5px;margin-top:5px}
 .mod_journal.wbce a.btn{display:inline-block;min-width:150px;background-color:#ccc;text-align:center;text-decoration:none;}
 .mod_journal.wbce a.btn:hover{color:#c00;}

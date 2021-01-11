@@ -2,21 +2,9 @@
     "use strict";
      $.get(CMS_URL+"/modules/journal/js/XBTooltip.js");
 
-    /* size presets click */
-    $("span.resize_defaults").unbind("click").on("click",function(e) {
-        var size = $(this).data("value");
-        $("input#resize_width").val(size);
-        $("input#resize_height").val(size);
-    });
-    $("span.resize_defaults_thumb").unbind("click").on("click",function(e) {
-        var size = $(this).data("value");
-        $("input#thumb_width").val(size);
-        $("input#thumb_height").val(size);
-    });
-
     /* toggle basic / advanced mode */
     $("input#toggle_mode").unbind("click").on("click",function(e) {
-        if(confirm('Please note: Unsaved changes are lost if you click ok')) {
+        if(confirm(MOD_JOURNAL_CONFIRM_TOGGLE_MODE)) {
             var dataString = $("form[name=modify_mode]").serialize();
             $.ajax({
                 type: "POST",
@@ -25,7 +13,7 @@
                 success: function() {
                     location.reload();
                 }
-    });
+            });
         } else {
         }
     });

@@ -78,9 +78,9 @@
     font-style: italic;
     padding: .5em .8em;
 }
-.mod_journal article.article > div {
+.mod_journal article.article > div:first-of-type {
     min-height:100%;
-        background-color: #fff;
+    background-color: #fff;
 }
 .mod_journal .mod_journal_article_entry {
 }

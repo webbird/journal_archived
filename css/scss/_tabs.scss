@@ -44,7 +44,7 @@ div.mod_journal div.tabs nav a {
 }
 div.mod_journal div.tabs nav a:hover {
   background: #4d5354;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.5);
 }
 div.mod_journal div.tabs nav li a,
 div.mod_journal div.tabs nav a:active {
@@ -70,17 +70,190 @@ div.mod_journal div.tabs nav li.licol3 a, div.mod_journal div.tabs nav li.licol3
 div.mod_journal div.tabs nav li.licol4 a, div.mod_journal div.tabs nav li.licol4 a:active {
   border-bottom-color: #fcfc74;
 }
-
 div.mod_journal div.tabs nav li a:hover {
     border-bottom-color: #fff;
 }
-
 div.mod_journal div.tabs nav li.active a { background: rgba(255, 255, 255, 0.05); }
 
 
 
 
-.mod_journal #subtab1:checked ~ #sub-tab-content1,
-.mod_journal #subtab2:checked ~ #sub-tab-content2 {
-    display: block;
+
+
+/**/
+/* sub / inner tabs */
+/**/
+div.innertabs {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	font-size: 0;
+	text-align: left;
+}
+div.innertabs > input[type="radio"] {
+	position: absolute;
+	left: -9999px;
+}
+div.innertabs > label {
+	position: relative;
+	display: inline-block;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	cursor: pointer;
+	transition: all 0.1s;
+}
+div.innertabs > input:checked + label {
+	cursor: default;
+}
+div.innertabs > .tab-content-first:checked ~ ul .tab-content-first,
+div.innertabs > .tab-content-2:checked ~ ul .tab-content-2,
+div.innertabs > .tab-content-3:checked ~ ul .tab-content-3,
+div.innertabs > .tab-content-4:checked ~ ul .tab-content-4,
+div.innertabs > .tab-content-5:checked ~ ul .tab-content-5,
+div.innertabs > .tab-content-6:checked ~ ul .tab-content-6,
+div.innertabs > .tab-content-7:checked ~ ul .tab-content-7,
+div.innertabs > .tab-content-8:checked ~ ul .tab-content-8,
+div.innertabs > .tab-content-9:checked ~ ul .tab-content-9,
+div.innertabs > .tab-content-last:checked ~ ul .tab-content-last {
+	z-index: 1;
+	top: 0;
+	left: 0;
+	opacity: 1;
+	transform: scale(1,1);
+	transform: rotate(0deg);
+}
+
+div.innertabs > ul {
+	list-style: none;
+	position: relative;
+	display: block;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: none;
+	font-size: 1rem;
+	text-align: left;
+    background-color: #fff;
+}
+div.innertabs > ul > li {
+	position: absolute;
+	width: 100%;
+	overflow: auto;
+	padding: 30px 40px 40px;
+	box-sizing: border-box;
+	opacity: 0;
+	transition: all 0.5s;
+}
+
+/**/
+/* default */
+/**/
+div.innertabs > label {
+	padding: 0 20px;
+	background: #e5e5e5;
+	font-size: 13px;
+	line-height: 49px;
+}
+div.innertabs > label:hover {
+	background: #f2f2f2;
+}
+div.innertabs > input:checked + label {
+	background: #fff;
+}
+div.innertabs-theme-1 > label {
+	margin: 0 5px 5px 0;
+	border-radius: 5px;
+	background: #fff;
+	box-shadow: 1px 2px rgba(0,0,0,0.2);
+	color: #808080;
+	opacity: 0.8;
+}
+div.innertabs-theme-1 > label:hover {
+	background: #fff;
+	opacity: 1;
+}
+div.innertabs-theme-1 > input:checked + label {
+	margin-bottom: 0;
+	color: #2b82d9;
+    box-shadow: 1px 2px rgba(43,130,217,0.5);
+	opacity: 1;
+}
+div.innertabs-theme-1 > ul {
+	border-radius: 5px;
+	box-shadow: 0 3px rgba(0,0,0,0.2);
+}
+div.innertabs-theme-1 > .tab-content-first:checked ~ ul {
+	border-top-left-radius: 0;
+}
+@media screen and (max-width: 767px) {
+	div.innertabs-theme-1 > label {
+		margin-right: 0;
+	}
+	div.innertabs-theme-1 > input:checked + label {
+		margin-bottom: 5px;
+		padding-bottom: 0;
+		border-radius: 5px;
+	}
+	div.innertabs-theme-1 > .tab-content-first:checked ~ ul {
+		border-top-left-radius: 5px;
+	}
+}
+
+/**/
+/* animation effects */
+/**/
+div.innertabs-effect-scale > ul > li {
+	-webkit-transform: scale(0.1,0.1);
+}
+div.innertabs-effect-rotate  > ul > li {
+	-webkit-transform: rotate(180deg);
+}
+div.innertabs-effect-slide-top > ul > li {
+	top: -40px;
+}
+div.innertabs-effect-slide-right > ul > li {
+	left: 80px;
+}
+div.innertabs-effect-slide-bottom > ul > li {
+	top: 40px;
+}
+div.innertabs-effect-slide-left > ul > li {
+	left: -80px;
+}
+
+
+/**/
+/* height */
+/**/
+div.innertabs > ul,
+div.innertabs > ul > li {
+	height: 370px;
+}
+
+/*----------------------------------------------------------------------------*/
+/*                               RESPONSIVENESS                               */
+/*----------------------------------------------------------------------------*/
+
+/**/
+/* pad */
+/**/
+@media screen and (max-width: 980px) {
+
+}
+
+
+/**/
+/* phone */
+/**/
+@media screen and (max-width: 767px) {
+	div.innertabs > label {
+		display: block;
+	}
+	div.innertabs > .right {
+		float: none;
+	}
 }

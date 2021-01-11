@@ -1,6 +1,6 @@
 /* ===== SWITCH ===== */
 /* The switch - the box around the slider */
-.switch {
+.mod_journal_switch {
   position: relative;
   display: inline-block;
   width: 30px;
@@ -8,10 +8,11 @@
 }
 
 /* Hide default HTML checkbox */
-.switch input {
+.mod_journal_switch input {
   opacity: 0;
   width: 0;
   height: 0;
+  min-height: inherit;
 }
 
 /* The slider */

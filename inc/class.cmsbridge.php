@@ -77,13 +77,13 @@ if (!class_exists('cmsbridge', false))
         public static function initialize(?array $section=array())
         {
             if (!defined('CMSBRIDGE_CMS_NAME')) {
-                define('CMSBRIDGE_CMS_WB', ((defined('WB_VERSION') && !defined('CAT_VERSION') && !defined('WBCE_VERSION')) ? true : false));
-                define('CMSBRIDGE_CMS_WBCE', ((defined('WBCE_VERSION'))  ? true    : false));
-                define('CMSBRIDGE_CMS_BC1', ((defined('CAT_VERSION') && version_compare(CAT_VERSION, '2.0', '<'))  ? true : false));
-                define('CMSBRIDGE_CMS_BC2', ((defined('CAT_VERSION') && version_compare(CAT_VERSION, '2.0', '>=')) ? true : false));
-                define('CMSBRIDGE_CMS_URL', (defined('WB_URL')      ? WB_URL    : (CMSBRIDGE_CMS_BC2 ? CAT_SITE_URL.'/'  : CAT_URL)));
+                define('CMSBRIDGE_CMS_WB'   , ((defined('WB_VERSION')    && !defined('CAT_VERSION') && !defined('WBCE_VERSION')) ? true : false));
+                define('CMSBRIDGE_CMS_WBCE' , ((defined('WBCE_VERSION')) ? true    : false));
+                define('CMSBRIDGE_CMS_BC1'  , ((defined('CAT_VERSION')   && version_compare(CAT_VERSION, '2.0', '<'))  ? true : false));
+                define('CMSBRIDGE_CMS_BC2'  , ((defined('CAT_VERSION')   && version_compare(CAT_VERSION, '2.0', '>=')) ? true : false));
+                define('CMSBRIDGE_CMS_URL'  , (defined('WB_URL')         ? WB_URL    : (CMSBRIDGE_CMS_BC2 ? CAT_SITE_URL.'/'  : CAT_URL)));
                 define('CMSBRIDGE_ADMIN_URL', (defined('WB_URL')      ? ADMIN_URL : CAT_ADMIN_URL));
-                define('CMSBRIDGE_CMS_NAME', (CMSBRIDGE_CMS_WBCE     ? 'wbce'    : (CMSBRIDGE_CMS_WB ? 'wb' : 'bc')));
+                define('CMSBRIDGE_CMS_NAME' , (CMSBRIDGE_CMS_WBCE        ? 'wbce'    : (CMSBRIDGE_CMS_WB ? 'wb' : 'bc')));
 
                 $basepath = (defined('WB_PATH') ? WB_PATH : (CMSBRIDGE_CMS_BC2 ? CAT_ENGINE_PATH : CAT_PATH));
                 if (CMSBRIDGE_CMS_BC2) {
@@ -98,11 +98,14 @@ if (!class_exists('cmsbridge', false))
             }
 
             $s = null;
+
             if (isset($section['section_id'])) {
                 $s = intval($section['section_id']);
-                define('CMSBRIDGE_MODULE', $section['module']);
                 define('CMSBRIDGE_SECTION', $s);
                 define('CMSBRIDGE_PAGE', self::pagefor($s));
+                if(isset($section['module'])) {
+                    define('CMSBRIDGE_MODULE', $section['module']);
+                }
             }
 
             if (CMSBRIDGE_CMS_BC2) {
@@ -135,6 +138,10 @@ if (!class_exists('cmsbridge', false))
 
             if (CMSBRIDGE_CMS_WBCE && !defined('CMSBRIDGE_MEDIA_FULLDIR')) {
                 define('CMSBRIDGE_MEDIA_FULLDIR', WB_PATH.'/'.CMSBRIDGE_MEDIA);
+            }
+
+            if (CMSBRIDGE_CMS_BC1 && !defined('CMSBRIDGE_MEDIA_FULLDIR')) {
+                define('CMSBRIDGE_MEDIA_FULLDIR', CAT_PATH.'/'.CMSBRIDGE_MEDIA);
             }
 
             // BC2 routes to URLs in BC1 and WBCE
@@ -217,7 +224,7 @@ if (!class_exists('cmsbridge', false))
                 return '';
             }
             global $database;
-            if (method_exists($database, 'escapeString')) {
+            if (is_object($database) && method_exists($database, 'escapeString')) {
                 return $database->escapeString($string);
             } else {
                 if (defined('CAT_PATH')) {
@@ -350,10 +357,10 @@ if (!class_exists('cmsbridge', false))
                 }
             }
             if (CMSBRIDGE_CMS_BC2) {
-                return \CAT\Helper\Page::properties($pageID);
+                return \CAT\Helper\Page::getPages();
             }
             if (CMSBRIDGE_CMS_BC1) {
-                return \CAT_Helper_Page::getPage($pageID);
+                return \CAT_Helper_Page::getPages();
             }
         }   // end function getPage()
 
@@ -370,7 +377,7 @@ if (!class_exists('cmsbridge', false))
             if (CMSBRIDGE_CMS_WBCE) {
                 global $wb;
                 $section = $wb->get_section_details($sectionID);
-                return ( isset($section['page_id']) ? $section['page_id'] : 0 );
+                return (isset($section['page_id']) ? $section['page_id'] : 0);
             }
             return 0;
         }   // end function getPageForSection()
@@ -389,6 +396,8 @@ if (!class_exists('cmsbridge', false))
                     $wb = new \wb();
                 }
                 return $wb->page_link($link);
+            } elseif(CMSBRIDGE_CMS_BC1) {
+                return \CAT_Helper_Page::getLink($link);
             } else {
                 return \CAT\Helper\Page::getLink($link);
             }
@@ -420,7 +429,7 @@ if (!class_exists('cmsbridge', false))
          * @access public
          * @return
          **/
-        public static function getSection($section_id)
+        public static function getSection(int $section_id)
         {
             global $wb, $admin;
             // WBCE
@@ -437,6 +446,8 @@ if (!class_exists('cmsbridge', false))
             } elseif (defined('CAT_VERSION')) {
                 if (version_compare(CAT_VERSION, '2.0', '<')) {
                     $section = \CAT_Sections::getSection($section_id);
+                } else {
+                    $section = \CAT\Sections::getSection($section_id,true);
                 }
             } else {
                 echo "oh no!";
@@ -481,6 +492,9 @@ if (!class_exists('cmsbridge', false))
             if (file_exists(__DIR__.'/../../../CAT/Hook.php')) {
                 return "BC2";
             }
+            if (file_exists(__DIR__.'/../../../framework/CAT/Object.php')) {
+                return "BC1";
+            }
         }   // end function identify()
 
         /**
@@ -505,7 +519,7 @@ if (!class_exists('cmsbridge', false))
             if (CMSBRIDGE_CMS_BC2) {
                 return \CAT\Sections::getPageForSection($sectionID);
             }
-            if (CMSBRIDGE_CMS_WBCE || CMSBRIDGE_CMS_WB) {
+            if (CMSBRIDGE_CMS_WBCE || CMSBRIDGE_CMS_WB || CMSBRIDGE_CMS_BC1) {
                 $stmt = self::db()->query(sprintf(
                     'SELECT `page_id` FROM `%ssections` WHERE `section_id`=%d',
                     self::dbprefix(),
@@ -628,14 +642,20 @@ if (!class_exists('cmsbridge', false))
                 self::$prefix = defined('CAT_TABLE_PREFIX') ? CAT_TABLE_PREFIX
                               : (defined('TABLE_PREFIX')   ? TABLE_PREFIX
                               : '');
-                if (CMSBRIDGE_CMS_BC2) {
+                if (defined('CMSBRIDGE_CMS_BC2') && CMSBRIDGE_CMS_BC2===true) {
                     // we have a ready-to-use Doctrine object
                     self::$db = \CAT\Base::db();
-                } elseif (CMSBRIDGE_CMS_BC1) {
+                } elseif (defined('CMSBRIDGE_CMS_BC1') && CMSBRIDGE_CMS_BC1===true) {
                     // we have a ready-to-use Doctrine object
                     self::$db = $database;
+                } elseif(file_exists(__DIR__.'/../../../framework/class.database.php')) {
+                    require_once __DIR__.'/../../../framework/class.database.php';
+                    self::$db = new \database();
+                    self::$prefix = defined('CAT_TABLE_PREFIX') ? CAT_TABLE_PREFIX
+                              : (defined('TABLE_PREFIX')   ? TABLE_PREFIX
+                              : '');
                 } else {
-                    if (is_object($database->db_handle) && $database->db_handle instanceof \Doctrine\DBAL\Connection) {
+                    if (is_object($database) && is_object($database->db_handle) && $database->db_handle instanceof \Doctrine\DBAL\Connection) {
                         self::$db = $database;
                     } else {
                         // old WBCE and WB only
@@ -668,11 +688,17 @@ if (!class_exists('cmsbridge', false))
          **/
         public static function dbsuccess() : bool
         {
-            if(empty(cmsbridge::conn()->errorCode()) || cmsbridge::conn()->errorCode() == '00000')
-            {
-                return true;
+            // only older Doctrine versions
+            $class = self::conn();
+            if(method_exists($class, 'errorCode')) {
+                if (empty($class->errorCode()) || $class->errorCode() == '00000') {
+                    return true;
+                } else {
+                    return false;
+                }
             }
-            return false;
+            // newer Doctrine versions throw exception
+            return true;
         }   // end function dbsuccess()
 
         /**

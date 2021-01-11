@@ -1,10 +1,10 @@
     <script src="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/js/datetimepickers/xdsoft/jquery.datetimepicker.full.min.js"></script>
     <script type="text/javascript">
-    jQuery.noConflict();
-    (function($) {
-        "use strict";
+        jQuery.noConflict();
+        (function($) {
+            "use strict";
+            jQuery("head").append('<link rel="stylesheet" type="text/css" href="<?php echo CMSBRIDGE_CMS_URL; ?>/modules/journal/js/datetimepickers/xdsoft/jquery.datetimepicker.min.css" media="all">');
             jQuery.datetimepicker.setLocale('<?php echo strtolower(LANGUAGE); ?>');
-
             $('#publishdate').datetimepicker({
                 timepicker:true,
                 format:'<?php echo $data['jscal_format'] ?> H:i',
@@ -22,5 +22,5 @@
             $('#enddate_trigger').click(function(){
                 $('#enddate').datetimepicker('show'); //support hide,show and destroy command
             });
-    })(jQuery);
+        })(jQuery);
     </script>

@@ -1,9 +1,13 @@
 @import url(../../css/utilities/tags.css); 
 @import url(../../css/utilities/colors.css);
 
+.mod_journal {
+    width: 100%;
+}
 .mod_journal .mod_journal_metadata {
     font-size:.7em;
     font-style:italic;
+    margin-bottom:1rem;
 }
 .mod_journal div.mod_journal_box {
     width: 100%;
@@ -32,14 +36,21 @@
     width:33.33%;
 }
 .mod_journal table.mod_journal_table{
+    margin-top: 1rem;
     width:100%;
+}
+.mod_journal td.mod_journal_table_right {
+    text-align: right;
 }
 
 .mod_journal table.mod_journal_table td.mod_journal_table_center{text-align:center}
-.mod_journal div.mod_journal_spacer{height:3em}
+.mod_journal div.mod_journal_spacer{clear:left;padding-top:.1em}
 
 /*** list page ***/
 .mod_journal .mod_journal_teaserpic{float:left;margin-right:15px;}
 .mod_journal .mod_journal_teaserpic img{height:10em;width:10em;object-fit:cover;}
 .mod_journal .mod_journal_teaserpic.rounded img{border-radius:50%;}
 .mod_journal .mod_journal_teaserpic.oval img{border-radius:50%;height:8em;}
+
+/*** details page ***/
+.mod_journal .mod_journal_content_short img{float:left;margin-right:15px;height:10em;width:10em;object-fit:cover;}

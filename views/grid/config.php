@@ -8,7 +8,7 @@ $article_loop = '<section class="mod_journal_grid_box">
         </div>
         <div class="mod_journal_teasertext mod_journal_grid_box" style="grid-column:2/6">
             <a href="[LINK]"><h3>[TITLE]</h3></a>
-            <div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] [IN_GROUP] [GROUP_TITLE]</div>
+            <div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [ARTICLE_DATE] [AT] [ARTICLE_TIME] [O_CLOCK] [IN_GROUP] [GROUP_TITLE]</div>
             <div class="mod_journal_tags">[TAGS]</div>
         </div>
     </div>
@@ -28,8 +28,8 @@ $footer = '</div>
     <td class="mod_journal_table_right">[NEXT_PAGE_LINK]</td>
 </tr>
 </table>';
-$article_header = addslashes('<h2>[TITLE]</h2>
-<div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [PUBLISHED_DATE] [AT] [PUBLISHED_TIME] [O_CLOCK] | [MODIFIED] [MODI_DATE] [AT] [MODI_TIME] [O_CLOCK]</div>');
+$article_header = '<h2>[TITLE]</h2>
+<div class="mod_journal_metadata">[COMPOSED_BY] [DISPLAY_NAME] [ON] [ARTICLE_DATE] [AT] [ARTICLE_TIME] [O_CLOCK] | [MODIFIED] [MODI_DATE] [AT] [MODI_TIME] [O_CLOCK]</div>';
 $article_content = '<div class="mod_journal_content_short">
   [IMAGE]
   [CONTENT_SHORT]
@@ -43,8 +43,9 @@ $article_footer = ' <div class="mod_journal_spacer"></div>
 <table class="mod_journal_table" style="visibility: [DISPLAY_PREVIOUS_NEXT_LINKS]">
 <tr>
     <td class="mod_journal_table_left">[PREVIOUS_PAGE_LINK]</td>
-    <td class="mod_journal_table_center"><a href="[BACK]">[BACK]</a></td>
+    <td class="mod_journal_table_center"><a href="[BACK_LINK]">[BACK]</a></td>
     <td class="mod_journal_table_right">[NEXT_PAGE_LINK]</td>
 </tr>
 </table>
 <div class="mod_journal_tags">[TAGS]</div>';
+$tag_loop = '<a href="[TAG_LINK]" class="mod_journal_tag" id="mod_journal_tag_[PAGEID]_[TAGID]" style="background-color:[TAGCOLOR];color:[TEXTCOLOR]" onmouseover="this.style.backgroundColor=\'[TAGHOVERCOLOR]\';" onmouseout="this.style.backgroundColor=\'[TAGCOLOR]\';this.style.color=\'[TEXTHOVERCOLOR];return true;\'">[TAG]</a>';

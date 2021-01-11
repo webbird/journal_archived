@@ -113,11 +113,20 @@
             	   </td>
                 </tr>
 <?php endif;?>
+                <tr>
+                    <td>
+                        <input type="submit" name="save" value="<?php echo self::t('Save') ?>" class="btn btn-primary" />
+                        <input name="saveandback" type="submit" value="<?php echo self::t('Save and go back') ?>" class="btn btn-primary" />
+        		        <input name="cancel" type="submit" value="<?php echo self::t('Cancel') ?>" class="btn btn-secondary" style="float:right" />
+                    </td>
+                </tr>
             </tbody>
         </table>
 
+        <hr />
+        
         <div id="fotoshow"><a name="fs"></a>
-            <h3><?php echo self::t('Gallery images') ?></h3>
+            <h2><?php echo self::t('Gallery images') ?></h2>
 <?php if(isset($data['images']) && is_array($data['images']) && count($data['images'])>0): $i=1; ?>
             <table class="dragdrop_form table table-sm">
                 <thead>
@@ -152,11 +161,6 @@
                         <td>
                             <input type="text" name="picdesc[<?php echo $image['pic_id'] ?>]" value="<?php echo htmlspecialchars($image["picdesc"]) ?>">
                         </td>
-                        <td>
-                            <a onclick="return confirm('<?php echo self::t('Delete image') ?>')" href="<?php echo $data['edit_url'] ?>page_id=<?php echo $pageID ?>&section_id=<?php echo $sectionID ?>&article_id=<?php echo $data['article_id'] ?>&img_id=<?php echo $image['pic_id'] ?>#fs">
-                                <i class="fa fa-fw fa-trash text-danger"></i>
-                            </a>
-                        </td>
                         <td class="dragdrop_item">&nbsp;</td>
                     </tr>
 <?php $i++; endforeach; ?>
@@ -164,10 +168,13 @@
             </table>
 <?php endif; ?>
         </div>
-
-
+    </form>
 <?php
     include __DIR__.'/modify_article_upload_form.phtml';
     include __DIR__.'/../../js/datetimepickers/xdsoft/include.phtml';
 ?>
+    <script src="<?php echo JOURNAL_MODURL; ?>/js/jquery.furl.js"></script>
+    <script type="text/javascript">
+        jQuery('#title<?php echo $pageID ?>').furl({id:'link<?php echo $pageID ?>', seperate: '<?php echo PAGE_SPACER ?>' });
+    </script>
 </div><!-- /mod_journal -->
